@@ -1,5 +1,5 @@
 +++
-title = "First"
+title = "Notícias"
 date = 2018-09-20T23:16:14-03:00
 draft = false
 
@@ -22,3 +22,5 @@ caption = ""
 preview = true
 
 +++
+
+- Linus Torvalds deu uma pausa no desenvolvimento do kernel
