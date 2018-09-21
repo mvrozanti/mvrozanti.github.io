@@ -1,10 +1,10 @@
 +++
 # Projects widget.
 widget = "projects"
-active = active
+active = true
 date = 2016-04-20T00:00:00
 
-title = "Projects"
+title = "Projetos"
 subtitle = ""
 
 # Order that this section will appear in.
@@ -32,14 +32,21 @@ filter_default = 0
 # [[filter]]
 #   name = "All"
 #   tag = "*"
-#
-# [[filter]]
-#   name = "Deep Learning"
-#   tag = "Deep Learning"
-#
-# [[filter]]
-#   name = "Other"
-#   tag = "Demo"
 
+[[filter]]
+  name = "Shell Scripting"
+  tag =  "Shell Scripting"
+
+[[filter]]
+  name = "Web Scraping"
+  tag =  "Web Scraping"
+
+[[filter]]
+  name = "Deep Learning"
+  tag =  "Deep Learning"
+
+[[filter]]
+  name = "Outros"
+  tag =  "Outros"
 +++
 
