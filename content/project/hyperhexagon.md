@@ -1,20 +1,20 @@
 +++
-title = "A fazer"
+title = "HyperHexagon"
 date = 2018-09-20T23:24:47-03:00
 draft = false
 
 # Tags: can be used for filtering projects.
 # Example: `tags = ["machine-learning", "deep-learning"]`
-tags = ["ideias"]
+tags = ["Deep Learning", "C#"]
 
 # Project summary to display on homepage.
-summary = "- Brainfuck interpreter written in [brainfuck](https://en.wikipedia.org/wiki/Brainfuck)"
+summary = "[Inacabado] agente independente que joga SuperHexagon"
 
 # Optional image to display on homepage.
 image_preview = ""
 
 # Optional external URL for project (replaces project detail page).
-external_link = ""
+external_link = "https://github.com/mvrozanti/HyperHexagon/"
 
 # Does the project detail page use math formatting?
 math = false
@@ -27,5 +27,4 @@ highlight = true
 [header]
 image = ""
 caption = ""
-
 +++

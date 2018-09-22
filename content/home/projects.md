@@ -8,7 +8,7 @@ title = "Projetos"
 subtitle = ""
 
 # Order that this section will appear in.
-weight = 50
+weight = 20
 
 # Content.
 # Display content from the following folder.
@@ -29,13 +29,17 @@ filter_default = 0
 # To show all items, set `tag` to "*".
 # To filter by a specific tag, set `tag` to an existing tag name.
 # To remove toolbar, delete/comment all instances of `[[filter]]` below.
-# [[filter]]
-#   name = "All"
-#   tag = "*"
+[[filter]]
+  name = "Todos"
+  tag = "*"
 
 [[filter]]
-  name = "Shell Scripting"
-  tag =  "Shell Scripting"
+  name = "Python"
+  tag =  "Python"
+
+[[filter]]
+  name = "Shell"
+  tag =  "Shell"
 
 [[filter]]
   name = "Web Scraping"
@@ -46,7 +50,15 @@ filter_default = 0
   tag =  "Deep Learning"
 
 [[filter]]
-  name = "Outros"
-  tag =  "Outros"
+  name = "Javascript"
+  tag =  "Javascript"
+
+[[filter]]
+  name = "C#"
+  tag =  "C#"
+
+[[filter]]
+  name = "Idéias"
+  tag =  "Ideias"
 +++
 

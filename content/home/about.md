@@ -12,7 +12,9 @@ weight = 5
   interests = [
     "Aprendizado de Máquina",
     "Linguística",
-    "Automação"
+    "Automação",
+    "Opensource",
+    "Linux"
   ]
 
 # List your qualifications (such as academic degrees).
@@ -25,4 +27,8 @@ weight = 5
 
 # Sobre mim
 
-Marcelo é um lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed neque elit, tristique placerat feugiat ac, facilisis vitae arcu. Proin eget egestas augue. Praesent ut sem nec arcu pellentesque aliquet. Duis dapibus diam vel metus tempus vulputate. 
+Sou um entusiasta de todo projeto original, criativo, bem estruturado e sem redundâncias. Refletir essas qualidades em todo software é meu objetivo. Me vejo adepto das boas práticas, comunicativo e "fuçador". Acredito que um bom profissional tem o dever de criar um projeto com as seguintes características, nesta ordem:
+
+- Funcional
+- Rápido
+- Fácil de ler
