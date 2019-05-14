@@ -23,4 +23,5 @@ preview = true
 
 +++
 
-- [utopian for beginners](https://www.newyorker.com/magazine/2012/12/24/utopian-for-beginners)
+- [Utopian for Beginners](https://www.newyorker.com/magazine/2012/12/24/utopian-for-beginners)
+![](https://media.newyorker.com/photos/59096632ebe912338a375992/master/w_1023,c_limit/121224_r22980_g2048.jpg)

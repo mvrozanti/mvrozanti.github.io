@@ -23,4 +23,5 @@ preview = true
 
 +++
 
-- Linus Torvalds deu uma pausa no desenvolvimento do kernel
+- [O Arch Linux também já pode ser instalado e usado no Windows 10](https://pplware.sapo.pt/linux/arch-linux-windows-10/?fbclid=IwAR1D7qq73HX-883LrGcR50tfjxBKvik0OZwJ73Kk-lOxTi4bxs2hcOBujfY)
+![](https://pplware.sapo.pt/wp-content/uploads/2019/05/archlinux_windows_10_1-720x405.jpg)
