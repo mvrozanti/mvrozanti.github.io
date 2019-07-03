@@ -4,7 +4,7 @@ date = 2018-09-20T23:16:14-03:00
 draft = false
 
 # Authors. Comma separated list, e.g. `["Bob Smith", "David Jones"]`.
-authors = ["Joshua Foer"]
+# authors = ["Joshua Foer"]
 
 # Tags and categories
 # For example, use `tags = []` for no tags, or the form `tags = ["A Tag", "Another Tag"]` for one or more tags.
@@ -26,3 +26,5 @@ preview = true
 - [Utopian for Beginners](https://www.newyorker.com/magazine/2012/12/24/utopian-for-beginners)
 <img src="https://media.newyorker.com/photos/59096632ebe912338a375992/master/w_1023,c_limit/121224_r22980_g2048.jpg" alt="John Quijada" style="width:200px;"/>
 
+- [Design Patterns and the Tower of Babel](https://effectivesoftwaredesign.com/2011/07/11/design-patterns-and-the-tower-of-babel/)
+<img src="https://effectivesoftwaredesign.files.wordpress.com/2011/07/350px-brueghel-tower-of-babel.jpg?w=300&h=226" alt="Babel" style="width:200px;"/>
