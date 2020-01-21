@@ -57,11 +57,11 @@ enableGitInfo = true
 
   # Your details.
   name = "Marcelo Vironda Rozanti"
-  role = "Estagiário e bug farmer"
+  role = "Desenvolvedor e Analista de Sistemas"
 
   # Organizations/Affiliations.
   #   Separate multiple entries with a comma, using the form: `[ {name="Org1", url=""}, {name="Org2", url=""} ]`.
-  organizations = [ { name = "Sys4Bank", url = "http://www.sys4bank.com.br/" } ]
+  organizations = [ { name = "Sys4Bank", url = "http://www.sys4bank.com.br/" }, { name = "Raia Drogasil", url="https://www.rd.com.br/" } ]
 
   gravatar = false  # Get your avatar from Gravatar.com? (true/false)
   avatar = "portrait.jpg"  # Specify an avatar image (in `static/img/` folder) or delete value to disable avatar.
