@@ -10,7 +10,7 @@ weight = 5
 # List your academic interests.
 [interests]
   interests = [
-    "Aprendizado de Máquina",
+    "Machine Learning",
     "Linguística",
     "Automação",
     "Opensource",
