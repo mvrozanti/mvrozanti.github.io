@@ -1,5 +1,5 @@
 +++
-title = "Artigos Interessantes"
+title = "Utilidades"
 date = 2018-09-20T23:16:14-03:00
 draft = false
 
@@ -30,3 +30,6 @@ preview = true
 
 - [Design Patterns and the Tower of Babel](https://effectivesoftwaredesign.com/2011/07/11/design-patterns-and-the-tower-of-babel/)
 <img src="https://effectivesoftwaredesign.files.wordpress.com/2011/07/350px-brueghel-tower-of-babel.jpg?w=300&h=226" alt="Babel" style="width:200px;"/>
+
+- [Terence McKenna - Searching For Patterns](https://www.youtube.com/watch?v=QJBOMwsGsYs)
+<img src="https://img.youtube.com/vi/QJBOMwsGsYs/0.jpg" alt="Darwin vs Torquemada" style="width:200px;"/>
