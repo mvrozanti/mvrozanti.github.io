@@ -10,11 +10,11 @@ weight = 5
 # List your academic interests.
 [interests]
   interests = [
-    "Machine Learning",
-    "Linguística",
     "Automação",
-    "Opensource",
-    "Linux"
+    "Linguística",
+    "Linux",
+    "Machine Learning",
+    "Opensource"
   ]
 
 # List your qualifications (such as academic degrees).
@@ -27,8 +27,4 @@ weight = 5
 
 # Sobre mim
 
-Sou um entusiasta de todo projeto original, criativo, bem estruturado e sem redundâncias. Refletir essas qualidades em todo software é meu objetivo. Me vejo adepto das boas práticas, comunicativo e "fuçador". Acredito que um bom profissional tem o dever de criar um projeto com as seguintes características, nesta ordem:
-
-- Funcional
-- Rápido
-- Fácil de ler
+Além de usuário, sou um desenvolvedor de software, entusiasta de todo projeto original, da facilidade e da simplicidade. Refletir essas qualidades em todo software é meu objetivo.

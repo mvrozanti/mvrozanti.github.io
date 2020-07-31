@@ -57,11 +57,15 @@ enableGitInfo = true
 
   # Your details.
   name = "Marcelo Vironda Rozanti"
-  role = "Desenvolvedor e Analista de Sistemas"
+  role = "Cientista da Computação e Desenvolvedor"
 
   # Organizations/Affiliations.
   #   Separate multiple entries with a comma, using the form: `[ {name="Org1", url=""}, {name="Org2", url=""} ]`.
-  organizations = [ { name = "Sys4Bank", url = "http://www.sys4bank.com.br/" }, { name = "Raia Drogasil", url="https://www.rd.com.br/" } ]
+  organizations = [
+                    { name = "Sys4Bank (2016-2018)", url = "http://www.sys4bank.com.br/" },
+                    { name = "Raia Drogasil (2018-2020)", url="https://www.rd.com.br/" },
+                    { name = "Grão", url = "https://www.grao.com.br/" }
+                    ]
 
   gravatar = false  # Get your avatar from Gravatar.com? (true/false)
   avatar = "portrait.jpg"  # Specify an avatar image (in `static/img/` folder) or delete value to disable avatar.
@@ -81,7 +85,7 @@ enableGitInfo = true
 
   # Diplay a logo in navigation bar rather than title (optional).
   #   To enable, place an image in `static/img/` and reference its filename below. To disable, set the value to "".
-  logo = "logo.png"
+  # logo = "logo.png"
 
   # Enable/disable map in Contact widget.
   # To show your address on a map in the contact widget, you need to enter your latitude, longitude and choose
