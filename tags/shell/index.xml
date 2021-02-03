@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Shell on Marcelo Vironda Rozanti</title>
+    <link>https://mvrozanti.github.io/tags/shell/</link>
+    <description>Recent content in Shell on Marcelo Vironda Rozanti</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>Minha landing page</copyright>
+    <lastBuildDate>Thu, 20 Sep 2018 23:24:47 -0300</lastBuildDate><atom:link href="https://mvrozanti.github.io/tags/shell/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Dotfiles</title>
+      <link>https://mvrozanti.github.io/project/mandragora/</link>
+      <pubDate>Thu, 20 Sep 2018 23:24:47 -0300</pubDate>
+      
+      <guid>https://mvrozanti.github.io/project/mandragora/</guid>
+      <description>Mandragora</description>
+    </item>
+    
+    <item>
+      <title>Dotfiles</title>
+      <link>https://mvrozanti.github.io/project/example/mandragora/</link>
+      <pubDate>Thu, 20 Sep 2018 23:24:47 -0300</pubDate>
+      
+      <guid>https://mvrozanti.github.io/project/example/mandragora/</guid>
+      <description>Mandragora</description>
+    </item>
+    
+  </channel>
+</rss>

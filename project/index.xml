@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Projects | </title>
+    <link>https://mvrozanti.github.io/project/</link>
+      <atom:link href="https://mvrozanti.github.io/project/index.xml" rel="self" type="application/rss+xml" />
+    <description>Projects</description>
+    <generator>Wowchemy (https://wowchemy.com)</generator><lastBuildDate>Thu, 20 Sep 2018 23:24:47 -0300</lastBuildDate>
+    <image>
+      <url>https://mvrozanti.github.io/images/icon_hub541c45ae21c0bb050a1d496a8d6b20c_2607_512x512_fill_lanczos_center_2.png</url>
+      <title>Projects</title>
+      <link>https://mvrozanti.github.io/project/</link>
+    </image>
+    
+    <item>
+      <title>BTC Bruteforce</title>
+      <link>https://mvrozanti.github.io/project/example/btc-priv-to-pub/</link>
+      <pubDate>Thu, 20 Sep 2018 23:24:47 -0300</pubDate>
+      <guid>https://mvrozanti.github.io/project/example/btc-priv-to-pub/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Date Time Expression</title>
+      <link>https://mvrozanti.github.io/project/example/dte/</link>
+      <pubDate>Thu, 20 Sep 2018 23:24:47 -0300</pubDate>
+      <guid>https://mvrozanti.github.io/project/example/dte/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>dotfiles</title>
+      <link>https://mvrozanti.github.io/project/example/mandragora/</link>
+      <pubDate>Thu, 20 Sep 2018 23:24:47 -0300</pubDate>
+      <guid>https://mvrozanti.github.io/project/example/mandragora/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>dotty</title>
+      <link>https://mvrozanti.github.io/project/example/dotty/</link>
+      <pubDate>Thu, 20 Sep 2018 23:24:47 -0300</pubDate>
+      <guid>https://mvrozanti.github.io/project/example/dotty/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Este site</title>
+      <link>https://mvrozanti.github.io/project/example/este-site/</link>
+      <pubDate>Thu, 20 Sep 2018 23:24:47 -0300</pubDate>
+      <guid>https://mvrozanti.github.io/project/example/este-site/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>HyperHexagon</title>
+      <link>https://mvrozanti.github.io/project/example/hyperhexagon/</link>
+      <pubDate>Thu, 20 Sep 2018 23:24:47 -0300</pubDate>
+      <guid>https://mvrozanti.github.io/project/example/hyperhexagon/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>rastreamento-correios</title>
+      <link>https://mvrozanti.github.io/project/example/rastreamento-correios/</link>
+      <pubDate>Thu, 20 Sep 2018 23:24:47 -0300</pubDate>
+      <guid>https://mvrozanti.github.io/project/example/rastreamento-correios/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>RAT-via-Telegram</title>
+      <link>https://mvrozanti.github.io/project/example/rat-via-telegram/</link>
+      <pubDate>Thu, 20 Sep 2018 23:24:47 -0300</pubDate>
+      <guid>https://mvrozanti.github.io/project/example/rat-via-telegram/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

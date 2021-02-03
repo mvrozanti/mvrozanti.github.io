@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Web Scraping on Marcelo Vironda Rozanti</title>
+    <link>https://mvrozanti.github.io/tags/web-scraping/</link>
+    <description>Recent content in Web Scraping on Marcelo Vironda Rozanti</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>Minha landing page</copyright>
+    <lastBuildDate>Thu, 20 Sep 2018 23:24:47 -0300</lastBuildDate><atom:link href="https://mvrozanti.github.io/tags/web-scraping/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>rastreamento-correios</title>
+      <link>https://mvrozanti.github.io/project/rastreamento-correios/</link>
+      <pubDate>Thu, 20 Sep 2018 23:24:47 -0300</pubDate>
+      
+      <guid>https://mvrozanti.github.io/project/rastreamento-correios/</guid>
+      <description>Curta implementação para checar o estado de entregas postais</description>
+    </item>
+    
+    <item>
+      <title>rastreamento-correios</title>
+      <link>https://mvrozanti.github.io/project/example/rastreamento-correios/</link>
+      <pubDate>Thu, 20 Sep 2018 23:24:47 -0300</pubDate>
+      
+      <guid>https://mvrozanti.github.io/project/example/rastreamento-correios/</guid>
+      <description>Curta implementação para checar o estado de entregas postais</description>
+    </item>
+    
+  </channel>
+</rss>

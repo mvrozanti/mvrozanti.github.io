@@ -1,0 +1,18 @@
+{
+  "name": "",
+  "short_name": "",
+  "lang": "en-us",
+  "theme_color": "#9E2E2E",
+  "background_color": "#9E2E2E",
+  "icons": [{
+    "src": "/images/icon_hub541c45ae21c0bb050a1d496a8d6b20c_2607_192x192_fill_lanczos_center_2.png",
+    "sizes": "192x192",
+    "type": "image/png"
+    }, {
+    "src": "/images/icon_hub541c45ae21c0bb050a1d496a8d6b20c_2607_512x512_fill_lanczos_center_2.png",
+    "sizes": "512x512",
+    "type": "image/png"
+     }],
+  "display": "standalone",
+  "start_url": "/?utm_source=web_app_manifest"
+}
