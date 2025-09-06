@@ -4,7 +4,6 @@ const AVATAR_URL = "https://avatars.githubusercontent.com/u/11381662?v=4";
 const TYPING_DELAY = 40;
 const TYPING_DELAY_RANDOMNESS = 40;
 const IMAGE_QUALITY_DELAY = 40;
-const GITHUB_TOKEN = process.env.TOKEN_GITHUB;
 
 const COMMANDS = [
   { cmd: "whoami", response: ["Marcelo Vironda Rozanti"] },
@@ -202,44 +201,12 @@ export default function Home() {
     fetchGitHubProjects();
   }, []);
 
-  // Fetch contributions using GraphQL - including private contributions
+  // Fetch contributions using our serverless function
   useEffect(() => {
     const fetchContributions = async () => {
       try {
-        // Calculate dates for the past year
-        const toDate = new Date();
-        const fromDate = new Date();
-        fromDate.setFullYear(toDate.getFullYear() - 1);
-        
-        const query = `
-          {
-            user(login: "mvrozanti") {
-              contributionsCollection(from: "${fromDate.toISOString()}", to: "${toDate.toISOString()}") {
-                contributionCalendar {
-                  totalContributions
-                  weeks {
-                    contributionDays {
-                      contributionCount
-                      date
-                    }
-                  }
-                }
-              }
-            }
-          }
-        `;
-
-        const response = await fetch('https://api.github.com/graphql', {
-          method: 'POST',
-          headers: {
-            'Authorization': `bearer ${GITHUB_TOKEN}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ query }),
-        });
-
-        const data = await response.json();
-        const weeks = data.data.user.contributionsCollection.contributionCalendar.weeks;
+        const response = await fetch('/api/github-contributions');
+        const weeks = await response.json();
         const heatmap = formatContributions(weeks);
         
         setCommands((prev) =>
@@ -256,12 +223,7 @@ export default function Home() {
       }
     };
     
-    if (GITHUB_TOKEN) {
-      fetchContributions();
-    } else {
-      console.error("GitHub token not found");
-      setIsLoading(false);
-    }
+    fetchContributions();
   }, []);
 
   // Cursor blink
