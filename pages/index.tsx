@@ -12,11 +12,11 @@ const COMMANDS = [
     cmd: "jq < about-me.json",
     response: [
       `[
-        "Bachelor of Computer Science @ Mackenzie University",
-        "Software Engineer",
-        "Cyberpunk enthusiast",
-        "Builder of sleek tools"
-      ]`,
+  "Bachelor of Computer Science @ Mackenzie University",
+  "Software Engineer",
+  "Cyberpunk enthusiast",
+  "Builder of sleek tools"
+]`,
     ],
   },
   {
@@ -205,7 +205,7 @@ export default function Home() {
   useEffect(() => {
     const fetchContributions = async () => {
       try {
-        const response = await fetch('/api/contributions');
+        const response = await fetch('https://mvrozanti-github-io.vercel.app/api/contributions');
         const weeks = await response.json();
         const heatmap = formatContributions(weeks);
 
