@@ -1,12 +1,10 @@
 import { useEffect, useState, useRef } from "react";
-import { env } from 'next-runtime-env';
 
 const AVATAR_URL = "https://avatars.githubusercontent.com/u/11381662?v=4";
 const TYPING_DELAY = 40;
 const TYPING_DELAY_RANDOMNESS = 40;
 const IMAGE_QUALITY_DELAY = 40;
 const GITHUB_TOKEN = process.env.TOKEN_GITHUB;
-console.log(GITHUB_TOKEN)
 
 const COMMANDS = [
   { cmd: "whoami", response: ["Marcelo Vironda Rozanti"] },
@@ -67,71 +65,99 @@ const formatProjects = (repos) => {
   return rows.map((row) => row.map((cell, i) => cell.padEnd(colWidths[i])).join("  "));
 };
 
-// Format contributions as text heatmap with better color distinction
+// Format contributions as text heatmap with correct GitHub API processing
 const formatContributions = (weeks) => {
   if (!weeks || !weeks.length) return ["[No contribution data]"];
   
-  // Use a single character with different colors and spacing
   const symbol = "■";
   
-  // More distinct color palette for better visibility
-  const colors = [
-    "text-gray-700",        // 0 contributions
-    "text-green-600",       // 1-2 contributions
-    "text-green-500",       // 3-5 contributions
-    "text-green-400",       // 6-10 contributions
-    "text-green-300",       // 11-15 contributions
-    "text-green-200",       // 16+ contributions
-  ];
+  // First, collect all contribution counts to determine the max
+  const allCounts = [];
+  weeks.forEach(week => {
+    week.contributionDays.forEach(day => {
+      allCounts.push(day.contributionCount);
+    });
+  });
+  
+  const maxCount = Math.max(...allCounts, 1); // Ensure at least 1 to avoid division by zero
   
   // Create a matrix for each day of the week (0-6, Sunday to Saturday)
   const daysOfWeek = Array(7).fill().map(() => []);
   
   // Process each week
   weeks.forEach(week => {
-    // Create a map for this week's contributions by day of week
-    const weekMap = {};
+    // For each day of the week, initialize with 0
+    const weekContributions = Array(7).fill(0);
+    
+    // Fill in actual contributions
     week.contributionDays.forEach(day => {
       const date = new Date(day.date);
       const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
-      weekMap[dayOfWeek] = day.contributionCount;
+      weekContributions[dayOfWeek] = day.contributionCount;
     });
     
-    // For each day of the week, add the contribution count
+    // Add to the appropriate day row
     for (let i = 0; i < 7; i++) {
-      const count = weekMap[i] || 0;
-      daysOfWeek[i].push(count);
+      daysOfWeek[i].push(weekContributions[i]);
     }
   });
+  
+  // Reorder the rows: move Saturday (index 6) to the top
+  const reorderedDays = [
+    daysOfWeek[6], // Saturday
+    daysOfWeek[0], // Sunday
+    daysOfWeek[1], // Monday
+    daysOfWeek[2], // Tuesday
+    daysOfWeek[3], // Wednesday
+    daysOfWeek[4], // Thursday
+    daysOfWeek[5], // Friday
+  ];
   
   // Convert to JSX elements with proper styling and spacing
   const result = [];
   
-  // For each day of the week (Sunday to Saturday)
+  // For each day of the week in the new order
   for (let day = 0; day < 7; day++) {
     const dayElements = [];
     
     // For each week, add the appropriate symbol with color
-    daysOfWeek[day].forEach((count, weekIndex) => {
-      let colorIndex = 0;
-      
+    reorderedDays[day].forEach((count, weekIndex) => {
+      // Calculate color based on relative contribution level
+      let intensity = 0;
       if (count > 0) {
-        if (count <= 2) colorIndex = 1;
-        else if (count <= 5) colorIndex = 2;
-        else if (count <= 10) colorIndex = 3;
-        else if (count <= 15) colorIndex = 4;
-        else colorIndex = 5;
+        // Scale from 1 to 4 based on the ratio to maxCount
+        intensity = Math.min(4, Math.ceil((count / maxCount) * 4));
       }
       
+      // GitHub's contribution colors (from darkest to lightest)
+      const colors = [
+        "#161b22",  // 0 contributions
+        "#0e4429",  // Level 1
+        "#006d32",  // Level 2
+        "#26a641",  // Level 3
+        "#39d353",  // Level 4
+      ];
+      
       dayElements.push(
-        <span key={weekIndex} className={`${colors[colorIndex]} mx-px`}>
+        <span 
+          key={weekIndex} 
+          style={{ 
+            color: colors[intensity],
+            display: 'inline-block',
+            width: '10px',
+            height: '10px',
+            margin: '0 1px',
+            fontSize: '12px',
+            lineHeight: '10px'
+          }}
+        >
           {symbol}
         </span>
       );
     });
     
     result.push(
-      <div key={day} className="whitespace-pre flex">
+      <div key={day} style={{ whiteSpace: 'pre' }}>
         {dayElements}
       </div>
     );
@@ -176,19 +202,25 @@ export default function Home() {
     fetchGitHubProjects();
   }, []);
 
-  // Fetch contributions using GraphQL
+  // Fetch contributions using GraphQL - including private contributions
   useEffect(() => {
     const fetchContributions = async () => {
       try {
+        // Calculate dates for the past year
+        const toDate = new Date();
+        const fromDate = new Date();
+        fromDate.setFullYear(toDate.getFullYear() - 1);
+        
         const query = `
           {
             user(login: "mvrozanti") {
-              contributionsCollection(from: "2024-01-01T00:00:00Z", to: "2025-01-01T00:00:00Z") {
+              contributionsCollection(from: "${fromDate.toISOString()}", to: "${toDate.toISOString()}") {
                 contributionCalendar {
+                  totalContributions
                   weeks {
                     contributionDays {
-                      date
                       contributionCount
+                      date
                     }
                   }
                 }
