@@ -1,115 +1,142 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
+import { useEffect, useState, useRef } from "react";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const COMMANDS = [
+  {
+    cmd: "whoami",
+    response: ["Marcelo"],
+  },
+  {
+    cmd: "echo 'Software Engineer, cyberpunk enthusiast, builder of sleek tools'",
+    response: ["Software Engineer · Cyberpunk enthusiast · Builder of sleek tools"],
+  },
+  {
+    cmd: "cat skills.txt",
+    response: [
+      "- JavaScript / TypeScript / React",
+      "- Node.js / Next.js",
+      "- Systems Design & Security",
+      "- Trading systems & backtests",
+    ],
+  },
+  {
+    cmd: "ls ~/projects",
+    response: [
+      "cyberpunk-site\t★ 124\tlast: 2025-08-30",
+      "neural-net-sim\t★ 78\tlast: 2025-07-12",
+      "blockchain-explorer\t★ 332\tlast: 2025-06-01",
+      "ascii-art-gen\t★ 9\tlast: 2025-05-17",
+    ],
+  },
+  {
+    cmd: "contact",
+    response: [
+      "GitHub: github.com/mvrozanti",
+      "LinkedIn: linkedin.com/in/mvrozanti",
+      "Email: mvrozanti@hotmail.com",
+    ],
+  },
+];
 
 export default function Home() {
+  const [displayed, setDisplayed] = useState([]);
+  const [typing, setTyping] = useState("");
+  const [index, setIndex] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    let mounted = true;
+    const start = async () => {
+      if (!mounted) return;
+      if (index >= COMMANDS.length) return;
+      const entry = COMMANDS[index];
+      setIsTyping(true);
+      const text = `> ${entry.cmd}`;
+      for (let i = 0; i < text.length; i++) {
+        if (!mounted) return;
+        setTyping((s) => s + text[i]);
+        await new Promise((r) => setTimeout(r, 40 + Math.random() * 30));
+      }
+      setTyping("");
+      setDisplayed((d) => [...d, text]);
+      setIsTyping(false);
+      setDisplayed((d) => [...d, ...entry.response]);
+      setIndex((i) => i + 1);
+    };
+    const timeout = setTimeout(start, 700);
+    return () => {
+      mounted = false;
+      clearTimeout(timeout);
+    };
+  }, [index]);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Enter") {
+        if (isTyping) {
+          const entry = COMMANDS[index];
+          if (!entry) return;
+          setTyping("");
+          setDisplayed((d) => [...d, `> ${entry.cmd}`]);
+          setIsTyping(false);
+          setDisplayed((d) => [...d, ...entry.response]);
+          setIndex((i) => i + 1);
+        } else {
+          if (index < COMMANDS.length) setIndex((i) => i + 0); // noop to trigger effect if ready
+        }
+      }
+      if (e.key.toLowerCase() === "r") {
+        setDisplayed([]);
+        setTyping("");
+        setIndex(0);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isTyping, index]);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, [displayed, typing]);
+
   return (
-    <div
-      className={`${geistSans.className} ${geistMono.className} font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20`}
-    >
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              pages/index.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen bg-black flex items-start justify-start p-6 pt-6">
+      <div className="relative w-full max-w-3xl">
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(closest-side,rgba(0,255,100,0.06),transparent)]" />
+        <div
+          ref={containerRef}
+          className="relative z-10 rounded-lg overflow-hidden border border-green-600/30 bg-black/95 p-6 font-mono text-green-300 text-sm shadow-[0_0_40px_rgba(0,255,0,0.06)]"
+          style={{ boxShadow: '0 0 60px rgba(0,255,0,0.04)' }}
+        >
+          <div className="h-4 mb-3 flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-green-500/60 shadow-[0_0_8px_rgba(0,255,0,0.6)]"></div>
+            <div className="w-3 h-3 rounded-full bg-green-400/40"></div>
+            <div className="w-3 h-3 rounded-full bg-green-300/20"></div>
+          </div>
+
+          <div className="space-y-1">
+            {displayed.map((line, i) => (
+              <div key={i} className="whitespace-pre-wrap leading-6 text-green-200">
+                {line}
+              </div>
+            ))}
+            {typing ? (
+              <div className="flex items-center gap-2">
+                <span className="text-green-300">{typing}</span>
+                <span className="inline-block w-3 h-5 bg-green-300 animate-pulse" />
+              </div>
+            ) : (
+              index < COMMANDS.length && (
+                <div className="text-green-500/70">{`Press Enter to continue • r to restart`}</div>
+              )
+            )}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(transparent,transparent_4px,rgba(0,0,0,0.08)_4px,rgba(0,0,0,0.08)_5px)] mix-blend-overlay opacity-5" />
+      </div>
     </div>
   );
 }
+
