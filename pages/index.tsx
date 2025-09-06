@@ -12,11 +12,11 @@ const COMMANDS = [
     cmd: "jq < about-me.json",
     response: [
       `[
-  "Bachelor of Computer Science @ Mackenzie University",
-  "Software Engineer",
-  "Cyberpunk enthusiast",
-  "Builder of sleek tools"
-]`,
+        "Bachelor of Computer Science @ Mackenzie University",
+        "Software Engineer",
+        "Cyberpunk enthusiast",
+        "Builder of sleek tools"
+      ]`,
     ],
   },
   {
@@ -57,7 +57,7 @@ const formatProjects = (repos) => {
     const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1)
       .toString()
       .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
-    return [repo.name, `★ ${repo.stargazers_count}`, `last: ${formattedDate}`];
+      return [repo.name, `★ ${repo.stargazers_count}`, `last: ${formattedDate}`];
   });
   const colWidths = [0, 0, 0];
   rows.forEach((row) => row.forEach((cell, i) => (colWidths[i] = Math.max(colWidths[i], cell.length))));
@@ -67,9 +67,9 @@ const formatProjects = (repos) => {
 // Format contributions as text heatmap with correct GitHub API processing
 const formatContributions = (weeks) => {
   if (!weeks || !weeks.length) return ["[No contribution data]"];
-  
+
   const symbol = "■";
-  
+
   // First, collect all contribution counts to determine the max
   const allCounts = [];
   weeks.forEach(week => {
@@ -77,30 +77,30 @@ const formatContributions = (weeks) => {
       allCounts.push(day.contributionCount);
     });
   });
-  
+
   const maxCount = Math.max(...allCounts, 1); // Ensure at least 1 to avoid division by zero
-  
+
   // Create a matrix for each day of the week (0-6, Sunday to Saturday)
   const daysOfWeek = Array(7).fill().map(() => []);
-  
+
   // Process each week
   weeks.forEach(week => {
     // For each day of the week, initialize with 0
     const weekContributions = Array(7).fill(0);
-    
+
     // Fill in actual contributions
     week.contributionDays.forEach(day => {
       const date = new Date(day.date);
       const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
       weekContributions[dayOfWeek] = day.contributionCount;
     });
-    
+
     // Add to the appropriate day row
     for (let i = 0; i < 7; i++) {
       daysOfWeek[i].push(weekContributions[i]);
     }
   });
-  
+
   // Reorder the rows: move Saturday (index 6) to the top
   const reorderedDays = [
     daysOfWeek[6], // Saturday
@@ -111,14 +111,14 @@ const formatContributions = (weeks) => {
     daysOfWeek[4], // Thursday
     daysOfWeek[5], // Friday
   ];
-  
+
   // Convert to JSX elements with proper styling and spacing
   const result = [];
-  
+
   // For each day of the week in the new order
   for (let day = 0; day < 7; day++) {
     const dayElements = [];
-    
+
     // For each week, add the appropriate symbol with color
     reorderedDays[day].forEach((count, weekIndex) => {
       // Calculate color based on relative contribution level
@@ -127,7 +127,7 @@ const formatContributions = (weeks) => {
         // Scale from 1 to 4 based on the ratio to maxCount
         intensity = Math.min(4, Math.ceil((count / maxCount) * 4));
       }
-      
+
       // GitHub's contribution colors (from darkest to lightest)
       const colors = [
         "#161b22",  // 0 contributions
@@ -136,32 +136,32 @@ const formatContributions = (weeks) => {
         "#26a641",  // Level 3
         "#39d353",  // Level 4
       ];
-      
+
       dayElements.push(
-        <span 
-          key={weekIndex} 
-          style={{ 
-            color: colors[intensity],
-            display: 'inline-block',
-            width: '10px',
-            height: '10px',
-            margin: '0 1px',
-            fontSize: '12px',
-            lineHeight: '10px'
-          }}
+        <span
+        key={weekIndex}
+        style={{
+          color: colors[intensity],
+          display: 'inline-block',
+          width: '10px',
+          height: '10px',
+          margin: '0 1px',
+          fontSize: '12px',
+          lineHeight: '10px'
+        }}
         >
-          {symbol}
+        {symbol}
         </span>
       );
     });
-    
+
     result.push(
       <div key={day} style={{ whiteSpace: 'pre' }}>
-        {dayElements}
+      {dayElements}
       </div>
     );
   }
-  
+
   return result;
 };
 
@@ -191,8 +191,8 @@ export default function Home() {
         if (Array.isArray(repos)) {
           const formatted = formatProjects(repos);
           setCommands((prev) =>
-            prev.map((cmd) => (cmd.dynamic === "github-projects" ? { ...cmd, response: formatted } : cmd))
-          );
+                      prev.map((cmd) => (cmd.dynamic === "github-projects" ? { ...cmd, response: formatted } : cmd))
+                     );
         }
       } catch (e) {
         console.error("Failed to fetch GitHub projects:", e);
@@ -208,21 +208,21 @@ export default function Home() {
         const response = await fetch('/api/github-contributions');
         const weeks = await response.json();
         const heatmap = formatContributions(weeks);
-        
+
         setCommands((prev) =>
-          prev.map((cmd) => (cmd.dynamic === "github-contributions" ? { ...cmd, response: heatmap } : cmd))
-        );
+                    prev.map((cmd) => (cmd.dynamic === "github-contributions" ? { ...cmd, response: heatmap } : cmd))
+                   );
       } catch (e) {
         console.error("Failed to fetch contributions:", e);
         // Fallback to empty data if API fails
         setCommands((prev) =>
-          prev.map((cmd) => (cmd.dynamic === "github-contributions" ? { ...cmd, response: ["[Failed to load contribution data]"] } : cmd))
-        );
+                    prev.map((cmd) => (cmd.dynamic === "github-contributions" ? { ...cmd, response: ["[Failed to load contribution data]"] } : cmd))
+                   );
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     fetchContributions();
   }, []);
 
@@ -312,8 +312,12 @@ export default function Home() {
           if (!entry) return;
           setTyping("");
           if (entry.special === "image") {
-            setDisplayed((d) => [...d, `> ${entry.cmd}`]);
-            setImageCommandIndex(displayed.length);
+            // Use functional update to get the current length
+            setDisplayed((d) => {
+              const newDisplayed = [...d, `> ${entry.cmd}`];
+              setImageCommandIndex(newDisplayed.length - 1); // Set index after update
+              return newDisplayed;
+            });
             setIsEnhancing(false);
             setPixelationLevel(1);
             drawPixelatedImage(1);
@@ -336,7 +340,7 @@ export default function Home() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [isTyping, index, displayed.length, commands]);
+  }, [isTyping, index, commands, drawPixelatedImage]); // Add drawPixelatedImage to dependencies if needed
 
   useEffect(() => {
     if (containerRef.current) containerRef.current.scrollTop = containerRef.current.scrollHeight;
@@ -344,61 +348,61 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-black flex items-start justify-start p-6 pt-6">
-      <div className="relative w-full max-w-3xl">
-        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(closest-side,rgba(0,255,100,0.06),transparent)]" />
-        <div
-          ref={containerRef}
-          className="relative z-10 rounded-lg overflow-hidden bg-black/95 p-6 font-mono text-green-300 text-sm shadow-[0_0_40px_rgba(0,255,0,0.06)]"
-          style={{ boxShadow: "0 0 60px rgba(0,255,0,0.04)" }}
-        >
-          <div className="h-4 mb-3 flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-green-500/60 shadow-[0_0_8px_rgba(0,255,0,0.6)]"></div>
-            <div className="w-3 h-3 rounded-full bg-green-400/40"></div>
-            <div className="w-3 h-3 rounded-full bg-green-300/20"></div>
-          </div>
+    <div className="relative w-full max-w-3xl">
+    <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(closest-side,rgba(0,255,100,0.06),transparent)]" />
+    <div
+    ref={containerRef}
+    className="relative z-10 rounded-lg overflow-hidden bg-black/95 p-6 font-mono text-green-300 text-sm shadow-[0_0_40px_rgba(0,255,0,0.06)]"
+    style={{ boxShadow: "0 0 60px rgba(0,255,0,0.04)" }}
+    >
+    <div className="h-4 mb-3 flex items-center gap-2">
+    <div className="w-3 h-3 rounded-full bg-green-500/60 shadow-[0_0_8px_rgba(0,255,0,0.6)]"></div>
+    <div className="w-3 h-3 rounded-full bg-green-400/40"></div>
+    <div className="w-3 h-3 rounded-full bg-green-300/20"></div>
+    </div>
 
-          <div className="space-y-1">
-            {displayed.map((line, i) => (
-              <div key={i} className="whitespace-pre-wrap leading-6 text-green-200">
-                {line}
-                {i === imageCommandIndex && (
-                  <div className="my-3">
-                    {isEnhancing ? (
-                      <div className="text-green-400 text-xs mb-1">[ENHANCING IMAGE...]</div>
-                    ) : (
-                      <div className="text-green-400 text-xs mb-1">[IMAGE ENHANCED]</div>
-                    )}
-                    <canvas ref={canvasRef} className="block rounded" />
-                    {isEnhancing && (
-                      <div className="text-green-500 text-xs mt-1">
-                        RESOLUTION: {Math.round((1 - (pixelationLevel - 1) / 19) * 100)}%
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {isLoading && index >= 4 ? (
-              <div className="flex items-center gap-2">
-                <span className="text-green-300">$ {commands[index]?.cmd}</span>
-                <span className={`inline-block w-3 h-5 bg-green-300 ${showCursor ? "opacity-100" : "opacity-0"}`} />
-                <span className="text-green-500 ml-2">[loading...]</span>
-              </div>
-            ) : typing ? (
-              <div className="flex items-center gap-2">
-                <span className="text-green-300">{typing}</span>
-                <span className={`inline-block w-3 h-5 bg-green-300 ${showCursor ? "opacity-100" : "opacity-0"}`} />
-              </div>
-            ) : index < commands.length ? (
-              <div className="flex items-center">
-                <span className={`inline-block w-3 h-5 bg-green-300 ml-1 ${showCursor ? "opacity-100" : "opacity-0"}`} />
-              </div>
-            ) : null}
+    <div className="space-y-1">
+    {displayed.map((line, i) => (
+      <div key={i} className="whitespace-pre-wrap leading-6 text-green-200">
+      {line}
+      {i === imageCommandIndex && (
+        <div className="my-3">
+        {isEnhancing ? (
+          <div className="text-green-400 text-xs mb-1">[ENHANCING IMAGE...]</div>
+        ) : (
+        <div className="text-green-400 text-xs mb-1">[IMAGE ENHANCED]</div>
+        )}
+        <canvas ref={canvasRef} className="block rounded" />
+        {isEnhancing && (
+          <div className="text-green-500 text-xs mt-1">
+          RESOLUTION: {Math.round((1 - (pixelationLevel - 1) / 19) * 100)}%
           </div>
+        )}
         </div>
-        <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(transparent,transparent_4px,rgba(0,0,0,0.08)_4px,rgba(0,0,0,0.08)_5px)] mix-blend-overlay opacity-5" />
+      )}
       </div>
+    ))}
+
+    {isLoading && index >= 4 ? (
+      <div className="flex items-center gap-2">
+      <span className="text-green-300">$ {commands[index]?.cmd}</span>
+      <span className={`inline-block w-3 h-5 bg-green-300 ${showCursor ? "opacity-100" : "opacity-0"}`} />
+      <span className="text-green-500 ml-2">[loading...]</span>
+      </div>
+    ) : typing ? (
+    <div className="flex items-center gap-2">
+    <span className="text-green-300">{typing}</span>
+    <span className={`inline-block w-3 h-5 bg-green-300 ${showCursor ? "opacity-100" : "opacity-0"}`} />
+    </div>
+    ) : index < commands.length ? (
+    <div className="flex items-center">
+    <span className={`inline-block w-3 h-5 bg-green-300 ml-1 ${showCursor ? "opacity-100" : "opacity-0"}`} />
+    </div>
+    ) : null}
+    </div>
+    </div>
+    <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(transparent,transparent_4px,rgba(0,0,0,0.08)_4px,rgba(0,0,0,0.08)_5px)] mix-blend-overlay opacity-5" />
+    </div>
     </div>
   );
 }

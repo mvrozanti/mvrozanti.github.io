@@ -1,4 +1,3 @@
-// pages/api/github-contributions.ts
 import { NextApiRequest, NextApiResponse } from 'next';
 
 const GITHUB_TOKEN = process.env.TOKEN_GITHUB;
@@ -51,8 +50,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Cache the response for 1 hour
     res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
     res.status(200).json(data.data.user.contributionsCollection.contributionCalendar.weeks);
-  } catch (e) {
-    console.error("Failed to fetch contributions:", e);
-    res.status(500).json({ error: 'Failed to fetch contributions', details: e.message });
+  } catch (error) {
+    console.error("Failed to fetch contributions:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    res.status(500).json({ error: 'Failed to fetch contributions', details: errorMessage });
   }
 }
