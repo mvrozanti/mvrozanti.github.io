@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 const AVATAR_URL = "https://avatars.githubusercontent.com/u/11381662?v=4";
 const TYPING_DELAY = 40;
@@ -243,7 +243,7 @@ export default function Home() {
     };
   }, []);
 
-  const drawPixelatedImage = (level) => {
+  const drawPixelatedImage = useCallback((level: number) => {
     if (!canvasRef.current || !imageRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
@@ -258,7 +258,7 @@ export default function Home() {
     ctx.drawImage(img, 0, 0, w, h);
     ctx.mozImageSmoothingEnabled = ctx.webkitImageSmoothingEnabled = ctx.imageSmoothingEnabled = false;
     ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
-  };
+  }, []);
 
   // Typing effect
   useEffect(() => {
@@ -305,24 +305,24 @@ export default function Home() {
 
   // Key handlers
   useEffect(() => {
-    const onKey = (e) => {
+    const onKey = (e: KeyboardEvent) => {
       if (e.key === "Enter") {
         if (isTyping) {
           const entry = commands[index];
           if (!entry) return;
           setTyping("");
           if (entry.special === "image") {
-            // Use functional update to get the current length
+            // Use functional update to avoid dependency on displayed.length
             setDisplayed((d) => {
-              const newDisplayed = [...d, `> ${entry.cmd}`];
-              setImageCommandIndex(newDisplayed.length - 1); // Set index after update
+              const newDisplayed = [...d, `$ ${entry.cmd}`];
+              setImageCommandIndex(newDisplayed.length - 1);
               return newDisplayed;
             });
-            setIsEnhancing(false);
+            setIsEnhancing(true);
             setPixelationLevel(1);
             drawPixelatedImage(1);
           } else {
-            setDisplayed((d) => [...d, `> ${entry.cmd}`, ...entry.response]);
+            setDisplayed((d) => [...d, `$ ${entry.cmd}`, ...entry.response]);
           }
           setIsTyping(false);
           setIndex((i) => i + 1);
@@ -340,7 +340,7 @@ export default function Home() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [isTyping, index, commands, drawPixelatedImage]); // Add drawPixelatedImage to dependencies if needed
+  }, [isTyping, index, commands, drawPixelatedImage]);
 
   useEffect(() => {
     if (containerRef.current) containerRef.current.scrollTop = containerRef.current.scrollHeight;
