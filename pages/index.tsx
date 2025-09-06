@@ -1,10 +1,12 @@
 import { useEffect, useState, useRef } from "react";
+import { env } from 'next-runtime-env';
 
 const AVATAR_URL = "https://avatars.githubusercontent.com/u/11381662?v=4";
 const TYPING_DELAY = 40;
 const TYPING_DELAY_RANDOMNESS = 40;
 const IMAGE_QUALITY_DELAY = 40;
-const GITHUB_TOKEN = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
+const GITHUB_TOKEN = process.env.TOKEN_GITHUB;
+console.log(GITHUB_TOKEN)
 
 const COMMANDS = [
   { cmd: "whoami", response: ["Marcelo Vironda Rozanti"] },
@@ -65,47 +67,77 @@ const formatProjects = (repos) => {
   return rows.map((row) => row.map((cell, i) => cell.padEnd(colWidths[i])).join("  "));
 };
 
-// Format contributions as text heatmap
+// Format contributions as text heatmap with better color distinction
 const formatContributions = (weeks) => {
   if (!weeks || !weeks.length) return ["[No contribution data]"];
   
-  const symbols = ["·", "▂", "▃", "▅", "█"];
+  // Use a single character with different colors and spacing
+  const symbol = "■";
   
-  // Flatten all contribution counts to find the maximum
-  const allCounts = weeks.flatMap(week => 
-    week.contributionDays.map(day => day.contributionCount)
-  );
-  const maxCount = Math.max(...allCounts);
+  // More distinct color palette for better visibility
+  const colors = [
+    "text-gray-700",        // 0 contributions
+    "text-green-600",       // 1-2 contributions
+    "text-green-500",       // 3-5 contributions
+    "text-green-400",       // 6-10 contributions
+    "text-green-300",       // 11-15 contributions
+    "text-green-200",       // 16+ contributions
+  ];
   
-  // Create a matrix for each day of the week (0-6)
+  // Create a matrix for each day of the week (0-6, Sunday to Saturday)
   const daysOfWeek = Array(7).fill().map(() => []);
   
+  // Process each week
   weeks.forEach(week => {
+    // Create a map for this week's contributions by day of week
+    const weekMap = {};
     week.contributionDays.forEach(day => {
       const date = new Date(day.date);
-      const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
-      
-      if (dayOfWeek >= 0 && dayOfWeek < 7) {
-        const count = day.contributionCount;
-        let symbol = symbols[0]; // Default to lowest symbol
-        
-        if (count > 0) {
-          // Calculate which symbol to use based on contribution count
-          const ratio = count / maxCount;
-          const symbolIndex = Math.min(
-            symbols.length - 1,
-            Math.floor(ratio * (symbols.length - 1)) + 1
-          );
-          symbol = symbols[symbolIndex];
-        }
-        
-        daysOfWeek[dayOfWeek].push(symbol);
-      }
+      const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
+      weekMap[dayOfWeek] = day.contributionCount;
     });
+    
+    // For each day of the week, add the contribution count
+    for (let i = 0; i < 7; i++) {
+      const count = weekMap[i] || 0;
+      daysOfWeek[i].push(count);
+    }
   });
   
-  // Convert each day's array to a string
-  return daysOfWeek.map(daySymbols => daySymbols.join(" "));
+  // Convert to JSX elements with proper styling and spacing
+  const result = [];
+  
+  // For each day of the week (Sunday to Saturday)
+  for (let day = 0; day < 7; day++) {
+    const dayElements = [];
+    
+    // For each week, add the appropriate symbol with color
+    daysOfWeek[day].forEach((count, weekIndex) => {
+      let colorIndex = 0;
+      
+      if (count > 0) {
+        if (count <= 2) colorIndex = 1;
+        else if (count <= 5) colorIndex = 2;
+        else if (count <= 10) colorIndex = 3;
+        else if (count <= 15) colorIndex = 4;
+        else colorIndex = 5;
+      }
+      
+      dayElements.push(
+        <span key={weekIndex} className={`${colors[colorIndex]} mx-px`}>
+          {symbol}
+        </span>
+      );
+    });
+    
+    result.push(
+      <div key={day} className="whitespace-pre flex">
+        {dayElements}
+      </div>
+    );
+  }
+  
+  return result;
 };
 
 export default function Home() {
@@ -261,7 +293,12 @@ export default function Home() {
         }
         setIsEnhancing(false);
       } else {
-        setDisplayed((d) => [...d, text, ...entry.response]);
+        // For the contributions command, we need to handle JSX elements differently
+        if (entry.dynamic === "github-contributions") {
+          setDisplayed((d) => [...d, text, ...entry.response]);
+        } else {
+          setDisplayed((d) => [...d, text, ...entry.response]);
+        }
       }
       setIndex((i) => i + 1);
     };
