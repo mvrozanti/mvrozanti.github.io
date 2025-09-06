@@ -1,9 +1,16 @@
 import { useEffect, useState, useRef } from "react";
 
+const AVATAR_URL = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80";
+
 const COMMANDS = [
   {
     cmd: "whoami",
     response: ["Marcelo"],
+  },
+  {
+    cmd: "display_avatar --enhance",
+    response: [],
+    special: "image"
   },
   {
     cmd: "echo 'Software Engineer, cyberpunk enthusiast, builder of sleek tools'",
@@ -42,27 +49,97 @@ export default function Home() {
   const [typing, setTyping] = useState("");
   const [index, setIndex] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
+  const [pixelationLevel, setPixelationLevel] = useState(20); // Start with high pixelation
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const [imageDisplayed, setImageDisplayed] = useState(false);
   const containerRef = useRef(null);
+  const canvasRef = useRef(null);
+  const imageRef = useRef(null);
+
+  useEffect(() => {
+    // Preload the image
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = AVATAR_URL;
+    img.onload = () => {
+      imageRef.current = img;
+      
+      // Draw initial pixelated image
+      if (canvasRef.current) {
+        drawPixelatedImage(20);
+      }
+    };
+  }, []);
+
+  const drawPixelatedImage = (level) => {
+    if (!canvasRef.current || !imageRef.current) return;
+    
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const img = imageRef.current;
+    
+    // Set canvas size to match image aspect ratio but limited width
+    const maxWidth = 300;
+    const ratio = Math.min(maxWidth / img.width, 1);
+    canvas.width = img.width * ratio;
+    canvas.height = img.height * ratio;
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw pixelated image
+    const w = canvas.width / level;
+    const h = canvas.height / level;
+    
+    // Draw original image at small size
+    ctx.drawImage(img, 0, 0, w, h);
+    // Stretch the small image to full size
+    ctx.mozImageSmoothingEnabled = false;
+    ctx.webkitImageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
+  };
 
   useEffect(() => {
     let mounted = true;
     const start = async () => {
-      if (!mounted) return;
-      if (index >= COMMANDS.length) return;
+      if (!mounted || index >= COMMANDS.length) return;
+      
       const entry = COMMANDS[index];
       setIsTyping(true);
+      
+      // Type the command
       const text = `> ${entry.cmd}`;
       for (let i = 0; i < text.length; i++) {
         if (!mounted) return;
         setTyping((s) => s + text[i]);
         await new Promise((r) => setTimeout(r, 40 + Math.random() * 30));
       }
+      
       setTyping("");
       setDisplayed((d) => [...d, text]);
       setIsTyping(false);
-      setDisplayed((d) => [...d, ...entry.response]);
+
+      // Handle special image printing effect
+      if (entry.special === "image") {
+        setIsEnhancing(true);
+        setImageDisplayed(true);
+        
+        // Gradually enhance image quality (reduce pixelation)
+        for (let i = 20; i >= 1; i -= 0.5) {
+          if (!mounted) return;
+          setPixelationLevel(i);
+          drawPixelatedImage(i);
+          await new Promise((r) => setTimeout(r, 80));
+        }
+        setIsEnhancing(false);
+      } else {
+        setDisplayed((d) => [...d, ...entry.response]);
+      }
+      
       setIndex((i) => i + 1);
     };
+    
     const timeout = setTimeout(start, 700);
     return () => {
       mounted = false;
@@ -70,6 +147,7 @@ export default function Home() {
     };
   }, [index]);
 
+  // Key handlers
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Enter") {
@@ -79,16 +157,29 @@ export default function Home() {
           setTyping("");
           setDisplayed((d) => [...d, `> ${entry.cmd}`]);
           setIsTyping(false);
-          setDisplayed((d) => [...d, ...entry.response]);
+          if (entry.special === "image") {
+            setIsEnhancing(false);
+            setImageDisplayed(true);
+            setPixelationLevel(1); // Skip to full resolution
+            drawPixelatedImage(1);
+          } else {
+            setDisplayed((d) => [...d, ...entry.response]);
+          }
           setIndex((i) => i + 1);
         } else {
-          if (index < COMMANDS.length) setIndex((i) => i + 0); // noop to trigger effect if ready
+          if (index < COMMANDS.length) setIndex((i) => i + 0);
         }
       }
       if (e.key.toLowerCase() === "r") {
         setDisplayed([]);
         setTyping("");
         setIndex(0);
+        setIsEnhancing(false);
+        setImageDisplayed(false);
+        setPixelationLevel(20);
+        if (imageRef.current) {
+          drawPixelatedImage(20);
+        }
       }
     };
     window.addEventListener("keydown", onKey);
@@ -99,7 +190,7 @@ export default function Home() {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
-  }, [displayed, typing]);
+  }, [displayed, typing, imageDisplayed]);
 
   return (
     <div className="min-h-screen bg-black flex items-start justify-start p-6 pt-6">
@@ -122,6 +213,32 @@ export default function Home() {
                 {line}
               </div>
             ))}
+            
+            {/* Show image with enhancement effect */}
+            {imageDisplayed && (
+              <div className="my-3 p-2 border border-green-500/30 rounded bg-black/80 overflow-hidden">
+                {isEnhancing ? (
+                  <div className="text-green-400 text-xs mb-1">[ENHANCING IMAGE...]</div>
+                ) : (
+                  <div className="text-green-400 text-xs mb-1">[IMAGE ENHANCED]</div>
+                )}
+                <canvas 
+                  ref={canvasRef} 
+                  className="mx-auto block rounded border border-green-700/50"
+                  style={{ 
+                    filter: `brightness(${100 + (20 - pixelationLevel) * 2}%) contrast(${100 + (20 - pixelationLevel) * 3}%)`,
+                    transition: 'filter 0.2s ease'
+                  }}
+                />
+                {isEnhancing && (
+                  <div className="text-green-500 text-xs mt-1 flex justify-between">
+                    <span>RESOLUTION: {Math.round((1 - (pixelationLevel - 1) / 19) * 100)}%</span>
+                    <span>ENHANCING...</span>
+                  </div>
+                )}
+              </div>
+            )}
+            
             {typing ? (
               <div className="flex items-center gap-2">
                 <span className="text-green-300">{typing}</span>
@@ -139,4 +256,3 @@ export default function Home() {
     </div>
   );
 }
-
