@@ -16,7 +16,6 @@
 # next.js
 /.next/*
 !/.next/output/static/
-/out/
 
 # production
 /build
