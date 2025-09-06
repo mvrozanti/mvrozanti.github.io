@@ -205,7 +205,7 @@ export default function Home() {
   useEffect(() => {
     const fetchContributions = async () => {
       try {
-        const response = await fetch('/api/github-contributions');
+        const response = await fetch('/api/contributions');
         const weeks = await response.json();
         const heatmap = formatContributions(weeks);
 
@@ -213,6 +213,7 @@ export default function Home() {
                     prev.map((cmd) => (cmd.dynamic === "github-contributions" ? { ...cmd, response: heatmap } : cmd))
                    );
       } catch (e) {
+        console.log(response)
         console.error("Failed to fetch contributions:", e);
         // Fallback to empty data if API fails
         setCommands((prev) =>

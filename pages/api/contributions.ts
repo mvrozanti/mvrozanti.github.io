@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
-const GITHUB_TOKEN = process.env.TOKEN_GITHUB;
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
