@@ -49,9 +49,9 @@ export default function Home() {
   const [typing, setTyping] = useState("");
   const [index, setIndex] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
-  const [pixelationLevel, setPixelationLevel] = useState(20); // Start with high pixelation
+  const [pixelationLevel, setPixelationLevel] = useState(20);
   const [isEnhancing, setIsEnhancing] = useState(false);
-  const [imageDisplayed, setImageDisplayed] = useState(false);
+  const [imageCommandIndex, setImageCommandIndex] = useState(-1);
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const imageRef = useRef(null);
@@ -63,8 +63,6 @@ export default function Home() {
     img.src = AVATAR_URL;
     img.onload = () => {
       imageRef.current = img;
-      
-      // Draw initial pixelated image
       if (canvasRef.current) {
         drawPixelatedImage(20);
       }
@@ -117,13 +115,12 @@ export default function Home() {
       }
       
       setTyping("");
-      setDisplayed((d) => [...d, text]);
-      setIsTyping(false);
-
-      // Handle special image printing effect
+      
+      // For image command, we'll handle it specially
       if (entry.special === "image") {
+        setDisplayed((d) => [...d, text]);
+        setImageCommandIndex(displayed.length);
         setIsEnhancing(true);
-        setImageDisplayed(true);
         
         // Gradually enhance image quality (reduce pixelation)
         for (let i = 20; i >= 1; i -= 0.5) {
@@ -134,7 +131,7 @@ export default function Home() {
         }
         setIsEnhancing(false);
       } else {
-        setDisplayed((d) => [...d, ...entry.response]);
+        setDisplayed((d) => [...d, text, ...entry.response]);
       }
       
       setIndex((i) => i + 1);
@@ -155,16 +152,18 @@ export default function Home() {
           const entry = COMMANDS[index];
           if (!entry) return;
           setTyping("");
-          setDisplayed((d) => [...d, `> ${entry.cmd}`]);
-          setIsTyping(false);
+          
           if (entry.special === "image") {
+            setDisplayed((d) => [...d, `> ${entry.cmd}`]);
+            setImageCommandIndex(displayed.length);
             setIsEnhancing(false);
-            setImageDisplayed(true);
-            setPixelationLevel(1); // Skip to full resolution
+            setPixelationLevel(1);
             drawPixelatedImage(1);
           } else {
-            setDisplayed((d) => [...d, ...entry.response]);
+            setDisplayed((d) => [...d, `> ${entry.cmd}`, ...entry.response]);
           }
+          
+          setIsTyping(false);
           setIndex((i) => i + 1);
         } else {
           if (index < COMMANDS.length) setIndex((i) => i + 0);
@@ -175,7 +174,7 @@ export default function Home() {
         setTyping("");
         setIndex(0);
         setIsEnhancing(false);
-        setImageDisplayed(false);
+        setImageCommandIndex(-1);
         setPixelationLevel(20);
         if (imageRef.current) {
           drawPixelatedImage(20);
@@ -184,13 +183,13 @@ export default function Home() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [isTyping, index]);
+  }, [isTyping, index, displayed.length]);
 
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
-  }, [displayed, typing, imageDisplayed]);
+  }, [displayed, typing, pixelationLevel]);
 
   return (
     <div className="min-h-screen bg-black flex items-start justify-start p-6 pt-6">
@@ -211,33 +210,32 @@ export default function Home() {
             {displayed.map((line, i) => (
               <div key={i} className="whitespace-pre-wrap leading-6 text-green-200">
                 {line}
-              </div>
-            ))}
-            
-            {/* Show image with enhancement effect */}
-            {imageDisplayed && (
-              <div className="my-3 p-2 border border-green-500/30 rounded bg-black/80 overflow-hidden">
-                {isEnhancing ? (
-                  <div className="text-green-400 text-xs mb-1">[ENHANCING IMAGE...]</div>
-                ) : (
-                  <div className="text-green-400 text-xs mb-1">[IMAGE ENHANCED]</div>
-                )}
-                <canvas 
-                  ref={canvasRef} 
-                  className="mx-auto block rounded border border-green-700/50"
-                  style={{ 
-                    filter: `brightness(${100 + (20 - pixelationLevel) * 2}%) contrast(${100 + (20 - pixelationLevel) * 3}%)`,
-                    transition: 'filter 0.2s ease'
-                  }}
-                />
-                {isEnhancing && (
-                  <div className="text-green-500 text-xs mt-1 flex justify-between">
-                    <span>RESOLUTION: {Math.round((1 - (pixelationLevel - 1) / 19) * 100)}%</span>
-                    <span>ENHANCING...</span>
+                {/* Insert image after the display_avatar command */}
+                {i === imageCommandIndex && (
+                  <div className="my-3 p-2 border border-green-500/30 rounded bg-black/80 overflow-hidden">
+                    {isEnhancing ? (
+                      <div className="text-green-400 text-xs mb-1">[ENHANCING IMAGE...]</div>
+                    ) : (
+                      <div className="text-green-400 text-xs mb-1">[IMAGE ENHANCED]</div>
+                    )}
+                    <canvas 
+                      ref={canvasRef} 
+                      className="mx-auto block rounded border border-green-700/50"
+                      style={{ 
+                        filter: `brightness(${100 + (20 - pixelationLevel) * 2}%) contrast(${100 + (20 - pixelationLevel) * 3}%)`,
+                        transition: 'filter 0.2s ease'
+                      }}
+                    />
+                    {isEnhancing && (
+                      <div className="text-green-500 text-xs mt-1 flex justify-between">
+                        <span>RESOLUTION: {Math.round((1 - (pixelationLevel - 1) / 19) * 100)}%</span>
+                        <span>ENHANCING...</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
+            ))}
             
             {typing ? (
               <div className="flex items-center gap-2">
