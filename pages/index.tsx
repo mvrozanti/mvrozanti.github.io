@@ -1,28 +1,38 @@
 import { useEffect, useState, useRef } from "react";
 
-const AVATAR_URL = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=200&q=80";
+const AVATAR_URL = "https://avatars.githubusercontent.com/u/11381662?v=4";
 
 const COMMANDS = [
   {
     cmd: "whoami",
-    response: ["Marcelo"],
+    response: ["Marcelo Vironda Rozanti"],
   },
   {
-    cmd: "display_avatar --enhance",
+    cmd: "w3m me.png",
     response: [],
     special: "image"
   },
   {
-    cmd: "echo 'Software Engineer, cyberpunk enthusiast, builder of sleek tools'",
-    response: ["Software Engineer · Cyberpunk enthusiast · Builder of sleek tools"],
+    cmd: "jq < about-me.json",
+    response: [
+        `
+[
+    "Bachelor of Computer Science @ Mackenzie University",
+    "Software Engineer",
+    "Cyberpunk enthusiast",
+    "Builder of sleek tools"
+]
+        `
+    ]
   },
   {
     cmd: "cat skills.txt",
     response: [
-      "- JavaScript / TypeScript / React",
-      "- Node.js / Next.js",
+      "- Automation",
+      "- Linguistics",
       "- Systems Design & Security",
-      "- Trading systems & backtests",
+      "- Machine Learning",
+      "- FOSS",
     ],
   },
   {
@@ -52,9 +62,19 @@ export default function Home() {
   const [pixelationLevel, setPixelationLevel] = useState(20);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [imageCommandIndex, setImageCommandIndex] = useState(-1);
+  const [showCursor, setShowCursor] = useState(true); // New state for cursor blinking
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const imageRef = useRef(null);
+
+  // Cursor blinking effect
+  useEffect(() => {
+    const cursorInterval = setInterval(() => {
+      setShowCursor(prev => !prev);
+    }, 500);
+    
+    return () => clearInterval(cursorInterval);
+  }, []);
 
   useEffect(() => {
     // Preload the image
@@ -77,7 +97,7 @@ export default function Home() {
     const img = imageRef.current;
     
     // Set canvas size to match image aspect ratio but limited width
-    const maxWidth = 300;
+    const maxWidth = 200;
     const ratio = Math.min(maxWidth / img.width, 1);
     canvas.width = img.width * ratio;
     canvas.height = img.height * ratio;
@@ -107,7 +127,7 @@ export default function Home() {
       setIsTyping(true);
       
       // Type the command
-      const text = `> ${entry.cmd}`;
+      const text = `$ ${entry.cmd}`;
       for (let i = 0; i < text.length; i++) {
         if (!mounted) return;
         setTyping((s) => s + text[i]);
@@ -116,7 +136,7 @@ export default function Home() {
       
       setTyping("");
       
-      // For image command, we'll handle it specially
+      // For image command, handle it specially
       if (entry.special === "image") {
         setDisplayed((d) => [...d, text]);
         setImageCommandIndex(displayed.length);
@@ -197,7 +217,7 @@ export default function Home() {
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(closest-side,rgba(0,255,100,0.06),transparent)]" />
         <div
           ref={containerRef}
-          className="relative z-10 rounded-lg overflow-hidden border border-green-600/30 bg-black/95 p-6 font-mono text-green-300 text-sm shadow-[0_0_40px_rgba(0,255,0,0.06)]"
+          className="relative z-10 rounded-lg overflow-hidden bg-black/95 p-6 font-mono text-green-300 text-sm shadow-[0_0_40px_rgba(0,255,0,0.06)]"
           style={{ boxShadow: '0 0 60px rgba(0,255,0,0.04)' }}
         >
           <div className="h-4 mb-3 flex items-center gap-2">
@@ -212,7 +232,7 @@ export default function Home() {
                 {line}
                 {/* Insert image after the display_avatar command */}
                 {i === imageCommandIndex && (
-                  <div className="my-3 p-2 border border-green-500/30 rounded bg-black/80 overflow-hidden">
+                  <div className="my-3">
                     {isEnhancing ? (
                       <div className="text-green-400 text-xs mb-1">[ENHANCING IMAGE...]</div>
                     ) : (
@@ -220,16 +240,11 @@ export default function Home() {
                     )}
                     <canvas 
                       ref={canvasRef} 
-                      className="mx-auto block rounded border border-green-700/50"
-                      style={{ 
-                        filter: `brightness(${100 + (20 - pixelationLevel) * 2}%) contrast(${100 + (20 - pixelationLevel) * 3}%)`,
-                        transition: 'filter 0.2s ease'
-                      }}
+                      className="block rounded"
                     />
                     {isEnhancing && (
-                      <div className="text-green-500 text-xs mt-1 flex justify-between">
-                        <span>RESOLUTION: {Math.round((1 - (pixelationLevel - 1) / 19) * 100)}%</span>
-                        <span>ENHANCING...</span>
+                      <div className="text-green-500 text-xs mt-1">
+                        RESOLUTION: {Math.round((1 - (pixelationLevel - 1) / 19) * 100)}%
                       </div>
                     )}
                   </div>
@@ -240,11 +255,13 @@ export default function Home() {
             {typing ? (
               <div className="flex items-center gap-2">
                 <span className="text-green-300">{typing}</span>
-                <span className="inline-block w-3 h-5 bg-green-300 animate-pulse" />
+                <span className={`inline-block w-3 h-5 bg-green-300 ${showCursor ? 'opacity-100' : 'opacity-0'}`} />
               </div>
             ) : (
               index < COMMANDS.length && (
-                <div className="text-green-500/70">{`Press Enter to continue • r to restart`}</div>
+                <div className="flex items-center">
+                  <span className={`inline-block w-3 h-5 bg-green-300 ml-1 ${showCursor ? 'opacity-100' : 'opacity-0'}`} />
+                </div>
               )
             )}
           </div>
