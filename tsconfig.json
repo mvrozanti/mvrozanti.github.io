@@ -14,7 +14,7 @@
     "noImplicitOverride": false,
     "noPropertyAccessFromIndexSignature": false,
     "allowUnreachableCode": true,
-    "allowUnusedLabels": true
+    "allowUnusedLabels": true,
 
     "lib": ["dom", "dom.iterable", "esnext"],
     "skipLibCheck": true,
