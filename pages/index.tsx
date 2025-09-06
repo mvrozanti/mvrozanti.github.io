@@ -1,6 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 
 const AVATAR_URL = "https://avatars.githubusercontent.com/u/11381662?v=4";
+const TYPING_DELAY = 40
+const TYPING_DELAY_RANDOMNESS = 40
+const IMAGE_QUALITY_DELAY = 40
 
 const COMMANDS = [
   {
@@ -13,8 +16,8 @@ const COMMANDS = [
     special: "image"
   },
   {
-    cmd: "jq < about-me.json",
-    response: [
+      cmd: "jq < about-me.json",
+      response: [
         `
 [
     "Bachelor of Computer Science @ Mackenzie University",
@@ -23,7 +26,7 @@ const COMMANDS = [
     "Builder of sleek tools"
 ]
         `
-    ]
+      ]
   },
   {
     cmd: "cat skills.txt",
@@ -36,13 +39,9 @@ const COMMANDS = [
     ],
   },
   {
-    cmd: "ls ~/projects",
-    response: [
-      "cyberpunk-site\t★ 124\tlast: 2025-08-30",
-      "neural-net-sim\t★ 78\tlast: 2025-07-12",
-      "blockchain-explorer\t★ 332\tlast: 2025-06-01",
-      "ascii-art-gen\t★ 9\tlast: 2025-05-17",
-    ],
+    cmd: "curl https://api.github.com/users/mvrozanti/repos | column -t",
+    response: [],
+    dynamic: "github-projects"
   },
   {
     cmd: "contact",
@@ -54,7 +53,35 @@ const COMMANDS = [
   },
 ];
 
+// Function to format GitHub projects in a tabular format
+const formatProjects = (repos) => {
+  if (!repos || repos.length === 0) return [];
+  
+  // Convert repos to table rows
+  const rows = repos.map(repo => {
+    const date = new Date(repo.updated_at);
+    const formattedDate = `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+    return [repo.name, `★ ${repo.stargazers_count}`, `last: ${formattedDate}`];
+  });
+  
+  // Calculate max column widths
+  const colWidths = [0, 0, 0];
+  rows.forEach(row => {
+    row.forEach((cell, i) => {
+      if (cell.length > colWidths[i]) {
+        colWidths[i] = cell.length;
+      }
+    });
+  });
+  
+  // Format rows with padding
+  return rows.map(row => 
+    row.map((cell, i) => cell.padEnd(colWidths[i])).join('  ')
+  );
+};
+
 export default function Home() {
+  const [commands, setCommands] = useState(COMMANDS);
   const [displayed, setDisplayed] = useState([]);
   const [typing, setTyping] = useState("");
   const [index, setIndex] = useState(0);
@@ -62,10 +89,53 @@ export default function Home() {
   const [pixelationLevel, setPixelationLevel] = useState(20);
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [imageCommandIndex, setImageCommandIndex] = useState(-1);
-  const [showCursor, setShowCursor] = useState(true); // New state for cursor blinking
+  const [showCursor, setShowCursor] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const imageRef = useRef(null);
+
+  // Fetch GitHub projects
+  useEffect(() => {
+    const fetchGitHubProjects = async () => {
+      try {
+        const response = await fetch('https://api.github.com/users/mvrozanti/repos?sort=updated&per_page=10');
+        const repos = await response.json();
+        
+        if (repos && Array.isArray(repos)) {
+          const formattedRepos = formatProjects(repos);
+          
+          // Update the commands with the fetched projects
+          setCommands(prevCommands => 
+            prevCommands.map(cmd => 
+              cmd.dynamic === "github-projects" 
+                ? {...cmd, response: formattedRepos} 
+                : cmd
+            )
+          );
+        }
+      } catch (error) {
+        console.error("Failed to fetch GitHub projects:", error);
+        // Fallback to default projects if API fails
+        setCommands(prevCommands => 
+          prevCommands.map(cmd => 
+            cmd.dynamic === "github-projects" 
+              ? {...cmd, response: [
+                "cyberpunk-site     ★ 124   last: 2025-08-30",
+                "neural-net-sim     ★ 78    last: 2025-07-12",
+                "blockchain-explorer  ★ 332   last: 2025-06-01",
+                "ascii-art-gen      ★ 9     last: 2025-05-17"
+              ]} 
+              : cmd
+          )
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchGitHubProjects();
+  }, []);
 
   // Cursor blinking effect
   useEffect(() => {
@@ -119,11 +189,14 @@ export default function Home() {
   };
 
   useEffect(() => {
+    // Don't start typing until data is loaded
+    if (isLoading) return;
+    
     let mounted = true;
     const start = async () => {
-      if (!mounted || index >= COMMANDS.length) return;
+      if (!mounted || index >= commands.length) return;
       
-      const entry = COMMANDS[index];
+      const entry = commands[index];
       setIsTyping(true);
       
       // Type the command
@@ -131,7 +204,7 @@ export default function Home() {
       for (let i = 0; i < text.length; i++) {
         if (!mounted) return;
         setTyping((s) => s + text[i]);
-        await new Promise((r) => setTimeout(r, 40 + Math.random() * 30));
+        await new Promise((r) => setTimeout(r, TYPING_DELAY + Math.random() * TYPING_DELAY_RANDOMNESS));
       }
       
       setTyping("");
@@ -147,7 +220,7 @@ export default function Home() {
           if (!mounted) return;
           setPixelationLevel(i);
           drawPixelatedImage(i);
-          await new Promise((r) => setTimeout(r, 80));
+          await new Promise((r) => setTimeout(r, IMAGE_QUALITY_DELAY));
         }
         setIsEnhancing(false);
       } else {
@@ -162,14 +235,14 @@ export default function Home() {
       mounted = false;
       clearTimeout(timeout);
     };
-  }, [index]);
+  }, [index, commands, isLoading]);
 
   // Key handlers
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Enter") {
         if (isTyping) {
-          const entry = COMMANDS[index];
+          const entry = commands[index];
           if (!entry) return;
           setTyping("");
           
@@ -186,7 +259,7 @@ export default function Home() {
           setIsTyping(false);
           setIndex((i) => i + 1);
         } else {
-          if (index < COMMANDS.length) setIndex((i) => i + 0);
+          if (index < commands.length) setIndex((i) => i + 0);
         }
       }
       if (e.key.toLowerCase() === "r") {
@@ -203,7 +276,7 @@ export default function Home() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [isTyping, index, displayed.length]);
+  }, [isTyping, index, displayed.length, commands]);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -252,13 +325,19 @@ export default function Home() {
               </div>
             ))}
             
-            {typing ? (
+            {isLoading && index === 4 ? ( // Show loading state for projects command
+              <div className="flex items-center gap-2">
+                <span className="text-green-300">$ {commands[4].cmd}</span>
+                <span className={`inline-block w-3 h-5 bg-green-300 ${showCursor ? 'opacity-100' : 'opacity-0'}`} />
+                <span className="text-green-500 ml-2">[fetching GitHub data...]</span>
+              </div>
+            ) : typing ? (
               <div className="flex items-center gap-2">
                 <span className="text-green-300">{typing}</span>
                 <span className={`inline-block w-3 h-5 bg-green-300 ${showCursor ? 'opacity-100' : 'opacity-0'}`} />
               </div>
             ) : (
-              index < COMMANDS.length && (
+              index < commands.length && (
                 <div className="flex items-center">
                   <span className={`inline-block w-3 h-5 bg-green-300 ml-1 ${showCursor ? 'opacity-100' : 'opacity-0'}`} />
                 </div>
