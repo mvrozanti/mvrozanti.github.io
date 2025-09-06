@@ -1,13 +1,15 @@
-// pages/api/github-contributions.js
+// pages/api/github-contributions.ts
+import { NextApiRequest, NextApiResponse } from 'next';
+
 const GITHUB_TOKEN = process.env.TOKEN_GITHUB;
 
-export default async function handler(req, res) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     // Calculate dates for the past year
     const toDate = new Date();
     const fromDate = new Date();
     fromDate.setFullYear(toDate.getFullYear() - 1);
-    
+
     const query = `
       {
         user(login: "mvrozanti") {
@@ -35,13 +37,22 @@ export default async function handler(req, res) {
       body: JSON.stringify({ query }),
     });
 
+    if (!response.ok) {
+      throw new Error(`GitHub API responded with status ${response.status}`);
+    }
+
     const data = await response.json();
-    
+
+    // Check for GraphQL errors
+    if (data.errors) {
+      throw new Error(`GraphQL errors: ${JSON.stringify(data.errors)}`);
+    }
+
     // Cache the response for 1 hour
     res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
     res.status(200).json(data.data.user.contributionsCollection.contributionCalendar.weeks);
   } catch (e) {
     console.error("Failed to fetch contributions:", e);
-    res.status(500).json({ error: 'Failed to fetch contributions' });
+    res.status(500).json({ error: 'Failed to fetch contributions', details: e.message });
   }
 }
