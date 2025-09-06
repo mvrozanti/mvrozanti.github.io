@@ -1,3 +1,0 @@
-User-agent: *
-
-Sitemap: https://mvrozanti.github.io/sitemap.xml
