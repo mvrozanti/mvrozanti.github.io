@@ -192,7 +192,7 @@ export default function Home() {
   useEffect(() => {
     const fetchContributions = async () => {
       try {
-        const response = await fetch('/api/contributions');
+        const response = await fetch('https://mvrozanti.github.io/api/contributions');
         const weeks = await response.json();
         const heatmap = formatContributions(weeks);
         setCommands((prev) =>
