@@ -18,7 +18,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: 'export',
-  distDir: 'static-export',
+  distDir: 'docs',
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -78,9 +78,9 @@ styles/
 EOL
 
 # Move static export files to root
-if [ -d "../static-export" ]; then
-  cp -r ../static-export/* .
-  rm -rf ../static-export
+if [ -d "../docs" ]; then
+  cp -r ../docs/* .
+  rm -rf ../docs
 fi
 
 # Ensure critical files exist
@@ -95,6 +95,6 @@ echo "Switching back to original branch..."
 git checkout "$CURRENT_BRANCH"
 
 # Clean up any remaining static export files
-rm -rf static-export
+rm -rf docs
 
 echo "Done! Static site deployed to gh-pages branch."
