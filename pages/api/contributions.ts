@@ -3,6 +3,12 @@ import { NextApiRequest, NextApiResponse } from 'next';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const ALLOWED_ORIGIN = "https://mvrozanti.github.io"
 
+export async function GET() {
+  return Response.json({ ok: true }, {
+    headers: { 'Access-Control-Allow-Origin': ALLOWED_ORIGIN },
+  });
+}
+
 export async function OPTIONS() {
   return new Response(null, {
     status: 200,
