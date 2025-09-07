@@ -1,0 +1,21 @@
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  output: 'export',
+  distDir: 'docs',
+  eslint: {
+    // Warning: This allows production builds to successfully complete even if
+    // your project has ESLint errors.
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    // Warning: This allows production builds to successfully complete even if
+    // your project has TypeScript errors.
+    ignoreBuildErrors: true,
+  },
+  env: {
+    TOKEN_GITHUB: process.env.TOKEN_GITHUB,
+  }
+};
+
+export default nextConfig;
