@@ -1,10 +1,13 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 
 const AVATAR_URL = "https://avatars.githubusercontent.com/u/11381662?v=4";
+const AVATAR_SIZE = 200;
+const RESUME_URL = "https://raw.githubusercontent.com/mvrozanti/cv/refs/heads/master/cv-ptbr-1.png";
+const RESUME_SIZE = 600;
 const TYPING_DELAY = 35;
 const TYPING_DELAY_RANDOMNESS = 40;
-const IMAGE_QUALITY_DELAY = 40;
-const TERMINAL_PADDING = "1.5rem"; // Set to "0" to remove padding and border
+const IMAGE_QUALITY_DELAY = 30;
+const TERMINAL_PADDING = "1.5rem";
 
 const COMMANDS = [
   { cmd: "whoami", response: ["Marcelo Vironda Rozanti"] },
@@ -56,9 +59,10 @@ const COMMANDS = [
       >mvrozanti@hotmail.com</a></span>,
     ],
   },
+  { cmd: "tmux split-window -h", response: ["Split pane created"] },
+  { cmd: "w3m resume.png", response: [], special: "resume-image", pane: "right" },
 ];
 
-// Format GitHub projects in a table
 const formatProjects = (repos) => {
   if (!repos || !repos.length) return [];
   const rows = repos.map((repo) => {
@@ -75,83 +79,57 @@ const formatProjects = (repos) => {
 
 const formatContributions = (weeks) => {
   if (!weeks || !weeks.length) return ["[No contribution data]"];
-
   const symbol = "■";
-
-  // First, collect all contribution counts to determine the max
   const allCounts = [];
   weeks.forEach(week => {
     week.contributionDays.forEach(day => {
       allCounts.push(day.contributionCount);
     });
   });
-
-  const maxCount = Math.max(...allCounts, 1); // Ensure at least 1 to avoid division by zero
-
-  // Create a matrix for each day of the week (0-6, Sunday to Saturday)
+  const maxCount = Math.max(...allCounts, 1);
   const daysOfWeek = Array(7).fill().map(() => []);
-
-  // Process each week
   weeks.forEach(week => {
-    // For each day of the week, initialize with 0
     const weekContributions = Array(7).fill(0);
-
-    // Fill in actual contributions
     week.contributionDays.forEach(day => {
       const date = new Date(day.date);
-      const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
+      const dayOfWeek = date.getDay();
       weekContributions[dayOfWeek] = day.contributionCount;
     });
-
-    // Add to the appropriate day row
     for (let i = 0; i < 7; i++) {
       daysOfWeek[i].push(weekContributions[i]);
     }
   });
-
-  // Reorder the rows: move Saturday (index 6) to the top
   const reorderedDays = [
-    daysOfWeek[6], // Saturday
-    daysOfWeek[0], // Sunday
-    daysOfWeek[1], // Monday
-    daysOfWeek[2], // Tuesday
-    daysOfWeek[3], // Wednesday
-    daysOfWeek[4], // Thursday
-    daysOfWeek[5], // Friday
+    daysOfWeek[6],
+    daysOfWeek[0],
+    daysOfWeek[1],
+    daysOfWeek[2],
+    daysOfWeek[3],
+    daysOfWeek[4],
+    daysOfWeek[5],
   ];
-
-  // Convert to JSX elements with proper styling and spacing
   const result = [];
-
-  // For each day of the week in the new order
   for (let day = 0; day < 7; day++) {
     const dayElements = [];
-
-    // For each week, add the appropriate symbol with color
     reorderedDays[day].forEach((count, weekIndex) => {
-      // Calculate color based on relative contribution level
       let intensity = 0;
       if (count > 0) {
-        // Scale from 1 to 4 based on the ratio to maxCount
         intensity = Math.min(4, Math.ceil((count / maxCount) * 4));
       }
-
-      // GitHub's contribution colors (from darkest to lightest)
       const colors = [
-        "#161b22",  // 0 contributions
-        "#0e4429",  // Level 1
-        "#006d32",  // Level 2
-        "#26a641",  // Level 3
-        "#39d353",  // Level 4
+        "#161b22",
+        "#0e4429",
+        "#006d32",
+        "#26a641",
+        "#39d353",
       ];
-
       dayElements.push(
         <span
           key={weekIndex}
           style={{
             color: colors[intensity],
             display: 'inline-block',
-            width: '1ch', // Use character width instead of fixed pixels
+            width: '1ch',
             margin: '0 1px',
           }}
         >
@@ -159,33 +137,38 @@ const formatContributions = (weeks) => {
         </span>
       );
     });
-
     result.push(
       <div key={day} style={{ whiteSpace: 'pre' }}>
         {dayElements}
       </div>
     );
   }
-
   return result;
 };
 
 export default function Home() {
   const [commands, setCommands] = useState(COMMANDS);
-  const [displayed, setDisplayed] = useState([]);
-  const [typing, setTyping] = useState("");
+  const [leftDisplayed, setLeftDisplayed] = useState([]);
+  const [rightDisplayed, setRightDisplayed] = useState([]);
+  const [leftTyping, setLeftTyping] = useState("");
+  const [rightTyping, setRightTyping] = useState("");
   const [index, setIndex] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
   const [pixelationLevel, setPixelationLevel] = useState(20);
+  const [resumePixelationLevel, setResumePixelationLevel] = useState(20);
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const [isResumeEnhancing, setIsResumeEnhancing] = useState(false);
   const [imageCommandIndex, setImageCommandIndex] = useState(-1);
   const [showCursor, setShowCursor] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSplit, setIsSplit] = useState(false);
+  const [activePane, setActivePane] = useState("left");
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
+  const resumeCanvasRef = useRef(null);
   const imageRef = useRef(null);
+  const resumeImageRef = useRef(null);
 
-  // Fetch GitHub projects
   useEffect(() => {
     const fetchGitHubProjects = async () => {
       try {
@@ -196,8 +179,8 @@ export default function Home() {
         if (Array.isArray(repos)) {
           const formatted = formatProjects(repos);
           setCommands((prev) =>
-                      prev.map((cmd) => (cmd.dynamic === "github-projects" ? { ...cmd, response: formatted } : cmd))
-                     );
+            prev.map((cmd) => (cmd.dynamic === "github-projects" ? { ...cmd, response: formatted } : cmd))
+          );
         }
       } catch (e) {
         console.error("Failed to fetch GitHub projects:", e);
@@ -206,68 +189,65 @@ export default function Home() {
     fetchGitHubProjects();
   }, []);
 
-  // Fetch contributions using our serverless function
   useEffect(() => {
     const fetchContributions = async () => {
-      // const response = await fetch('https://mvrozanti-github-io.vercel.app/api/contributions');
-      const response = await fetch('/api/contributions');
       try {
+        const response = await fetch('/api/contributions');
         const weeks = await response.json();
         const heatmap = formatContributions(weeks);
-
         setCommands((prev) =>
-                    prev.map((cmd) => (cmd.dynamic === "github-contributions" ? { ...cmd, response: heatmap } : cmd))
-                   );
+          prev.map((cmd) => (cmd.dynamic === "github-contributions" ? { ...cmd, response: heatmap } : cmd))
+        );
       } catch (e) {
-        console.log(response)
         console.error("Failed to fetch contributions:", e);
-        // Fallback to empty data if API fails
         setCommands((prev) =>
-                    prev.map((cmd) => (cmd.dynamic === "github-contributions" ? { ...cmd, response: ["[Failed to load contribution data]"] } : cmd))
-                   );
+          prev.map((cmd) => (cmd.dynamic === "github-contributions" ? { ...cmd, response: ["[Failed to load contribution data]"] } : cmd))
+        );
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchContributions();
   }, []);
 
-  // Cursor blink
   useEffect(() => {
     const id = setInterval(() => setShowCursor((s) => !s), 500);
     return () => clearInterval(id);
   }, []);
 
-  // Preload avatar image
   useEffect(() => {
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.src = AVATAR_URL;
     img.onload = () => {
       imageRef.current = img;
-      drawPixelatedImage(20);
+      drawPixelatedImage(20, canvasRef, img, AVATAR_SIZE);
+    };
+
+    const resumeImg = new Image();
+    resumeImg.crossOrigin = "anonymous";
+    resumeImg.src = RESUME_URL;
+    resumeImg.onload = () => {
+      resumeImageRef.current = resumeImg;
+      drawPixelatedImage(20, resumeCanvasRef, resumeImg, RESUME_SIZE);
     };
   }, []);
 
-  const drawPixelatedImage = useCallback((level: number) => {
-    if (!canvasRef.current || !imageRef.current) return;
+  const drawPixelatedImage = useCallback((level, canvasRef, image, maxWidth) => {
+    if (!canvasRef.current || !image) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
-    const img = imageRef.current;
-    const maxWidth = 200;
-    const ratio = Math.min(maxWidth / img.width, 1);
-    canvas.width = img.width * ratio;
-    canvas.height = img.height * ratio;
+    const ratio = Math.min(maxWidth / image.width, 1);
+    canvas.width = image.width * ratio;
+    canvas.height = image.height * ratio;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const w = canvas.width / level;
     const h = canvas.height / level;
-    ctx.drawImage(img, 0, 0, w, h);
+    ctx.drawImage(image, 0, 0, w, h);
     ctx.mozImageSmoothingEnabled = ctx.webkitImageSmoothingEnabled = ctx.imageSmoothingEnabled = false;
     ctx.drawImage(canvas, 0, 0, w, h, 0, 0, canvas.width, canvas.height);
   }, []);
 
-  // Typing effect
   useEffect(() => {
     if (isLoading) return;
     let mounted = true;
@@ -275,31 +255,60 @@ export default function Home() {
       if (!mounted || index >= commands.length) return;
       const entry = commands[index];
       setIsTyping(true);
+
+      // Set active pane based on command
+      if (entry.pane === "right") {
+        setActivePane("right");
+      }
+
       const text = `$ ${entry.cmd}`;
+
+      // Use the appropriate typing setter based on pane
+      const setTyping = entry.pane === "right" ? setRightTyping : setLeftTyping;
+
       for (let i = 0; i < text.length; i++) {
         if (!mounted) return;
         setTyping((s) => s + text[i]);
         await new Promise((r) => setTimeout(r, TYPING_DELAY + Math.random() * TYPING_DELAY_RANDOMNESS));
       }
-      setTyping("");
-      if (entry.special === "image") {
-        setDisplayed((d) => [...d, text]);
-        setImageCommandIndex(displayed.length);
+
+      // Clear the appropriate typing
+      if (entry.pane === "right") {
+        setRightTyping("");
+      } else {
+        setLeftTyping("");
+      }
+
+      // Check if this is the tmux split command
+      if (entry.cmd === "tmux split-window -h") {
+        setIsSplit(true);
+        setLeftDisplayed((d) => [...d, text, ...entry.response]);
+      }
+      // Check if this is a right pane command
+      else if (entry.pane === "right") {
+        setRightDisplayed((d) => [...d, text]);
+        setIsResumeEnhancing(true);
+        for (let i = 20; i >= 1; i -= 0.5) {
+          if (!mounted) return;
+          setResumePixelationLevel(i);
+          drawPixelatedImage(i, resumeCanvasRef, resumeImageRef.current, RESUME_SIZE);
+          await new Promise((r) => setTimeout(r, IMAGE_QUALITY_DELAY));
+        }
+        setIsResumeEnhancing(false);
+      }
+      else if (entry.special === "image") {
+        setLeftDisplayed((d) => [...d, text]);
+        setImageCommandIndex(leftDisplayed.length);
         setIsEnhancing(true);
         for (let i = 20; i >= 1; i -= 0.5) {
           if (!mounted) return;
           setPixelationLevel(i);
-          drawPixelatedImage(i);
+          drawPixelatedImage(i, canvasRef, imageRef.current, AVATAR_SIZE);
           await new Promise((r) => setTimeout(r, IMAGE_QUALITY_DELAY));
         }
         setIsEnhancing(false);
       } else {
-        // For the contributions command, we need to handle JSX elements differently
-        if (entry.dynamic === "github-contributions") {
-          setDisplayed((d) => [...d, text, ...entry.response]);
-        } else {
-          setDisplayed((d) => [...d, text, ...entry.response]);
-        }
+        setLeftDisplayed((d) => [...d, text, ...entry.response]);
       }
       setIndex((i) => i + 1);
     };
@@ -308,41 +317,65 @@ export default function Home() {
       mounted = false;
       clearTimeout(timeout);
     };
-  }, [index, commands, isLoading]);
+  }, [index, commands, isLoading, drawPixelatedImage]);
 
-  // Key handlers
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (e) => {
       if (e.key === "Enter") {
         if (isTyping) {
           const entry = commands[index];
           if (!entry) return;
-          setTyping("");
-          if (entry.special === "image") {
-            // Use functional update to avoid dependency on displayed.length
-            setDisplayed((d) => {
+
+          // Clear the appropriate typing
+          if (entry.pane === "right") {
+            setRightTyping("");
+          } else {
+            setLeftTyping("");
+          }
+
+          // Check if this is the tmux split command
+          if (entry.cmd === "tmux split-window -h") {
+            setIsSplit(true);
+            setLeftDisplayed((d) => [...d, `$ ${entry.cmd}`, ...entry.response]);
+          }
+          // Check if this is a right pane command
+          else if (entry.pane === "right") {
+            setRightDisplayed((d) => [...d, `$ ${entry.cmd}`]);
+            setIsResumeEnhancing(true);
+            setResumePixelationLevel(1);
+            drawPixelatedImage(1, resumeCanvasRef, resumeImageRef.current, RESUME_SIZE);
+          }
+          else if (entry.special === "image") {
+            setLeftDisplayed((d) => {
               const newDisplayed = [...d, `$ ${entry.cmd}`];
               setImageCommandIndex(newDisplayed.length - 1);
               return newDisplayed;
             });
             setIsEnhancing(true);
             setPixelationLevel(1);
-            drawPixelatedImage(1);
+            drawPixelatedImage(1, canvasRef, imageRef.current, AVATAR_SIZE);
           } else {
-            setDisplayed((d) => [...d, `$ ${entry.cmd}`, ...entry.response]);
+            setLeftDisplayed((d) => [...d, `$ ${entry.cmd}`, ...entry.response]);
           }
           setIsTyping(false);
           setIndex((i) => i + 1);
         }
       }
       if (e.key.toLowerCase() === "r") {
-        setDisplayed([]);
-        setTyping("");
+        setLeftDisplayed([]);
+        setRightDisplayed([]);
+        setLeftTyping("");
+        setRightTyping("");
         setIndex(0);
         setIsEnhancing(false);
+        setIsResumeEnhancing(false);
         setImageCommandIndex(-1);
         setPixelationLevel(20);
-        drawPixelatedImage(20);
+        setResumePixelationLevel(20);
+        setIsSplit(false);
+        setActivePane("left");
+        drawPixelatedImage(20, canvasRef, imageRef.current, AVATAR_SIZE);
+        drawPixelatedImage(20, resumeCanvasRef, resumeImageRef.current, RESUME_SIZE);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -351,14 +384,13 @@ export default function Home() {
 
   useEffect(() => {
     if (containerRef.current) containerRef.current.scrollTop = containerRef.current.scrollHeight;
-  }, [displayed, typing, pixelationLevel]);
+  }, [leftDisplayed, rightDisplayed, leftTyping, rightTyping, pixelationLevel, resumePixelationLevel]);
 
-  // Determine if we should show padding and border
   const hasPadding = TERMINAL_PADDING !== "0";
 
   return (
     <div className="min-h-screen bg-black flex items-start justify-start p-6 pt-6">
-      <div className="relative w-full max-w-3xl">
+      <div className="relative w-full max-w-6xl mx-auto">
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(closest-side,rgba(0,255,100,0.06),transparent)]" />
         <div
           ref={containerRef}
@@ -378,40 +410,85 @@ export default function Home() {
             </div>
           )}
 
-          <div className="space-y-1">
-            {displayed.map((line, i) => (
-              <div key={i} className="whitespace-pre-wrap leading-6 text-green-200">
-                {line}
-                {i === imageCommandIndex && (
-                  <div className="my-3">
-                    <canvas ref={canvasRef} className="block rounded" />
-                    {isEnhancing && (
-                      <div className="text-green-500 text-xs mt-1">
-                        RESOLUTION: {Math.round((1 - (pixelationLevel - 1) / 19) * 100)}%
+          <div className="flex w-full items-stretch" style={{ minHeight: "400px" }}>
+            {/* Left Pane */}
+            <div className={`${isSplit ? "w-1/2 pr-4 border-r border-green-500/80" : "w-full"}`}>
+              <div className="space-y-1">
+                {leftDisplayed.map((line, i) => (
+                  <div key={i} className="whitespace-pre-wrap leading-6 text-green-300">
+                    {line}
+                    {i === imageCommandIndex && (
+                      <div className="my-3">
+                        <canvas ref={canvasRef} className="block rounded" />
+                        {isEnhancing && (
+                          <div className="text-green-500 text-xs mt-1">
+                            RESOLUTION: {Math.round((1 - (pixelationLevel - 1) / 19) * 100)}%
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
+                ))}
+
+                {/* Left pane typing indicator */}
+                {activePane === "left" && leftTyping && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-300">{leftTyping}</span>
+                    <span className={`inline-block w-3 h-5 bg-green-300 ${showCursor ? "opacity-100" : "opacity-0"}`} />
+                  </div>
                 )}
               </div>
-            ))}
+            </div>
 
-            {isLoading && index >= 4 ? (
-              <div className="flex items-center gap-2">
-                <span className="text-green-300">$ {commands[index]?.cmd}</span>
-                <span className={`inline-block w-3 h-5 bg-green-300 ${showCursor ? "opacity-100" : "opacity-0"}`} />
-                <span className="text-green-500 ml-2">[loading...]</span>
+            {/* Right Pane - Only visible after split */}
+            {isSplit && (
+              <div className="w-1/2 pl-4">
+                {/* Right pane content */}
+                <div className="space-y-1">
+                  {rightDisplayed.map((line, i) => (
+                    <div key={i} className="whitespace-pre-wrap leading-6 text-green-300">
+                      {line}
+                    </div>
+                  ))}
+
+                  {/* Resume Image */}
+                  {rightDisplayed.length > 0 && (
+                    <div className="my-3">
+                      <canvas ref={resumeCanvasRef} className="block rounded mx-auto" />
+                      {isResumeEnhancing && (
+                        <div className="text-green-500 text-xs mt-1 text-center">
+                          RESOLUTION: {Math.round((1 - (resumePixelationLevel - 1) / 19) * 100)}%
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Right pane typing indicator */}
+                  {activePane === "right" && rightTyping && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-300">{rightTyping}</span>
+                      <span className={`inline-block w-3 h-5 bg-green-300 ${showCursor ? "opacity-100" : "opacity-0"}`} />
+                    </div>
+                  )}
+                </div>
               </div>
-            ) : typing ? (
-              <div className="flex items-center gap-2">
-                <span className="text-green-300">{typing}</span>
-                <span className={`inline-block w-3 h-5 bg-green-300 ${showCursor ? "opacity-100" : "opacity-0"}`} />
-              </div>
-            ) : index < commands.length ? (
-              <div className="flex items-center">
-                <span className={`inline-block w-3 h-5 bg-green-300 ml-1 ${showCursor ? "opacity-100" : "opacity-0"}`} />
-              </div>
-            ) : null}
+            )}
           </div>
+
+          {/* Global typing indicator (for before split) */}
+          {!isSplit && !leftTyping && !rightTyping && index < commands.length && (
+            <div className="flex items-center gap-2 mt-4">
+              {isLoading && index >= 4 ? (
+                <>
+                  <span className="text-green-300">$ {commands[index]?.cmd}</span>
+                  <span className={`inline-block w-3 h-5 bg-green-300 ${showCursor ? "opacity-100" : "opacity-0"}`} />
+                  <span className="text-green-500 ml-2">[loading...]</span>
+                </>
+              ) : (
+                <span className={`inline-block w-3 h-5 bg-green-300 ml-1 ${showCursor ? "opacity-100" : "opacity-0"}`} />
+              )}
+            </div>
+          )}
         </div>
         <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(transparent,transparent_4px,rgba(0,0,0,0.08)_4px,rgba(0,0,0,0.08)_5px)] mix-blend-overlay opacity-5" />
       </div>
