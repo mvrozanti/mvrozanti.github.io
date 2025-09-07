@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 
 const AVATAR_URL = "https://avatars.githubusercontent.com/u/11381662?v=4";
-const TYPING_DELAY = 40;
+const TYPING_DELAY = 35;
 const TYPING_DELAY_RANDOMNESS = 40;
 const IMAGE_QUALITY_DELAY = 40;
+const TERMINAL_PADDING = "1.5rem"; // Set to "0" to remove padding and border
 
 const COMMANDS = [
   { cmd: "whoami", response: ["Marcelo Vironda Rozanti"] },
@@ -30,11 +31,6 @@ const COMMANDS = [
     ],
   },
   {
-    cmd: "curl https://api.github.com/users/mvrozanti/repos | column -t",
-    response: [],
-    dynamic: "github-projects",
-  },
-  {
     cmd: "gh contributions",
     response: [],
     dynamic: "github-contributions",
@@ -42,9 +38,22 @@ const COMMANDS = [
   {
     cmd: "contact",
     response: [
-      "GitHub: github.com/mvrozanti",
-      "LinkedIn: linkedin.com/in/mvrozanti",
-      "Email: mvrozanti@hotmail.com",
+      <span key="github">GitHub: <a
+        href="https://github.com/mvrozanti"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-inherit hover:text-inherit underline"
+      >github.com/mvrozanti</a></span>,
+      <span key="linkedin">LinkedIn: <a
+        href="https://linkedin.com/in/mvrozanti"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-inherit hover:text-inherit underline"
+      >linkedin.com/in/mvrozanti</a></span>,
+      <span key="email">Email: <a
+        href="mailto:mvrozanti@hotmail.com"
+        className="text-inherit hover:text-inherit underline"
+      >mvrozanti@hotmail.com</a></span>,
     ],
   },
 ];
@@ -64,7 +73,6 @@ const formatProjects = (repos) => {
   return rows.map((row) => row.map((cell, i) => cell.padEnd(colWidths[i])).join("  "));
 };
 
-// Format contributions as text heatmap with correct GitHub API processing
 const formatContributions = (weeks) => {
   if (!weeks || !weeks.length) return ["[No contribution data]"];
 
@@ -139,25 +147,22 @@ const formatContributions = (weeks) => {
 
       dayElements.push(
         <span
-        key={weekIndex}
-        style={{
-          color: colors[intensity],
-          display: 'inline-block',
-          width: '10px',
-          height: '10px',
-          margin: '0 1px',
-          fontSize: '12px',
-          lineHeight: '10px'
-        }}
+          key={weekIndex}
+          style={{
+            color: colors[intensity],
+            display: 'inline-block',
+            width: '1ch', // Use character width instead of fixed pixels
+            margin: '0 1px',
+          }}
         >
-        {symbol}
+          {symbol}
         </span>
       );
     });
 
     result.push(
       <div key={day} style={{ whiteSpace: 'pre' }}>
-      {dayElements}
+        {dayElements}
       </div>
     );
   }
@@ -204,7 +209,8 @@ export default function Home() {
   // Fetch contributions using our serverless function
   useEffect(() => {
     const fetchContributions = async () => {
-      const response = await fetch('https://mvrozanti-github-io.vercel.app/api/contributions');
+      // const response = await fetch('https://mvrozanti-github-io.vercel.app/api/contributions');
+      const response = await fetch('/api/contributions');
       try {
         const weeks = await response.json();
         const heatmap = formatContributions(weeks);
@@ -347,68 +353,67 @@ export default function Home() {
     if (containerRef.current) containerRef.current.scrollTop = containerRef.current.scrollHeight;
   }, [displayed, typing, pixelationLevel]);
 
-  return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl mx-auto">
-        <div className="relative rounded-lg overflow-hidden bg-black/95 border border-green-700/30 p-6 font-mono text-green-300 text-sm">
-          {/* Subtle glow effect */}
-          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(closest-side,rgba(0,255,100,0.04),transparent)]" />
+  // Determine if we should show padding and border
+  const hasPadding = TERMINAL_PADDING !== "0";
 
-          {/* Goyo-like centered content */}
-          <div className="flex flex-col items-center justify-center">
-            <div className="h-4 mb-4 flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-green-500/60"></div>
+  return (
+    <div className="min-h-screen bg-black flex items-start justify-start p-6 pt-6">
+      <div className="relative w-full max-w-3xl">
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(closest-side,rgba(0,255,100,0.06),transparent)]" />
+        <div
+          ref={containerRef}
+          className="relative z-10 rounded-lg overflow-hidden bg-black/95 p-6 font-mono text-green-300 text-sm shadow-[0_0_40px_rgba(0,255,0,0.06)]"
+          style={{
+            boxShadow: "0 0 60px rgba(0,255,0,0.04)",
+            padding: hasPadding ? TERMINAL_PADDING : "0",
+            border: hasPadding ? "1px solid rgba(0, 255, 102, 0.3)" : "none",
+            margin: hasPadding ? "1rem" : "0"
+          }}
+        >
+          {hasPadding && (
+            <div className="h-4 mb-3 flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-500/60 shadow-[0_0_8px_rgba(0,255,0,0.6)]"></div>
               <div className="w-3 h-3 rounded-full bg-green-400/40"></div>
               <div className="w-3 h-3 rounded-full bg-green-300/20"></div>
             </div>
+          )}
 
-            <div
-              ref={containerRef}
-              className="w-full max-w-md space-y-2 text-center overflow-y-auto max-h-[70vh]"
-            >
-              {displayed.map((line, i) => (
-                <div key={i} className="whitespace-pre-wrap leading-6 text-green-200">
-                  {line}
-                  {i === imageCommandIndex && (
-                    <div className="my-3 flex flex-col items-center">
-                      {isEnhancing ? (
-                        <div className="text-green-400 text-xs mb-1">[ENHANCING IMAGE...]</div>
-                      ) : (
-                        <div className="text-green-400 text-xs mb-1">[IMAGE ENHANCED]</div>
-                      )}
-                      <canvas ref={canvasRef} className="block rounded" />
-                      {isEnhancing && (
-                        <div className="text-green-500 text-xs mt-1">
-                          RESOLUTION: {Math.round((1 - (pixelationLevel - 1) / 19) * 100)}%
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
+          <div className="space-y-1">
+            {displayed.map((line, i) => (
+              <div key={i} className="whitespace-pre-wrap leading-6 text-green-200">
+                {line}
+                {i === imageCommandIndex && (
+                  <div className="my-3">
+                    <canvas ref={canvasRef} className="block rounded" />
+                    {isEnhancing && (
+                      <div className="text-green-500 text-xs mt-1">
+                        RESOLUTION: {Math.round((1 - (pixelationLevel - 1) / 19) * 100)}%
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
 
-              {isLoading && index >= 4 ? (
-                <div className="flex items-center justify-center gap-2">
-                  <span className="text-green-300">$ {commands[index]?.cmd}</span>
-                  <span className={`inline-block w-3 h-5 bg-green-300 ${showCursor ? "opacity-100" : "opacity-0"}`} />
-                  <span className="text-green-500 ml-2">[loading...]</span>
-                </div>
-              ) : typing ? (
-                <div className="flex items-center justify-center gap-2">
-                  <span className="text-green-300">{typing}</span>
-                  <span className={`inline-block w-3 h-5 bg-green-300 ${showCursor ? "opacity-100" : "opacity-0"}`} />
-                </div>
-              ) : index < commands.length ? (
-                <div className="flex items-center justify-center">
-                  <span className={`inline-block w-3 h-5 bg-green-300 ml-1 ${showCursor ? "opacity-100" : "opacity-0"}`} />
-                </div>
-              ) : null}
-            </div>
+            {isLoading && index >= 4 ? (
+              <div className="flex items-center gap-2">
+                <span className="text-green-300">$ {commands[index]?.cmd}</span>
+                <span className={`inline-block w-3 h-5 bg-green-300 ${showCursor ? "opacity-100" : "opacity-0"}`} />
+                <span className="text-green-500 ml-2">[loading...]</span>
+              </div>
+            ) : typing ? (
+              <div className="flex items-center gap-2">
+                <span className="text-green-300">{typing}</span>
+                <span className={`inline-block w-3 h-5 bg-green-300 ${showCursor ? "opacity-100" : "opacity-0"}`} />
+              </div>
+            ) : index < commands.length ? (
+              <div className="flex items-center">
+                <span className={`inline-block w-3 h-5 bg-green-300 ml-1 ${showCursor ? "opacity-100" : "opacity-0"}`} />
+              </div>
+            ) : null}
           </div>
-
-          {/* Scanline effect */}
-          <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(transparent,transparent_4px,rgba(0,0,0,0.08)_4px,rgba(0,0,0,0.08)_5px)] mix-blend-overlay opacity-5" />
         </div>
+        <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(transparent,transparent_4px,rgba(0,0,0,0.08)_4px,rgba(0,0,0,0.08)_5px)] mix-blend-overlay opacity-5" />
       </div>
     </div>
   );
