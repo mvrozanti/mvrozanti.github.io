@@ -3,6 +3,9 @@ import { NextApiRequest, NextApiResponse } from 'next';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
   try {
     // Calculate dates for the past year
     const toDate = new Date();
