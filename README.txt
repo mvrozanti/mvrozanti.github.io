@@ -5,6 +5,8 @@ At the same time, it is cleaner to use the github.io domain without user-prompt-
 So the Next app has to be built in a static manner - see the next.config.ts script inside build.sh.
 This allows Vercel to normally deploy the master branch while gh-pages serves the static page which in turn queries Vercel.
 
+The workflow is to commit first, then run the build script
+
 # TODO
 
 - Add
