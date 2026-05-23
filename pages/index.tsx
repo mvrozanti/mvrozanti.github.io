@@ -170,6 +170,15 @@ export default function Home() {
   const resumeImageRef = useRef(null);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.matchMedia("(max-width: 768px)").matches) {
+      setCommands((prev) =>
+        prev.filter((c) => c.cmd !== "tmux split-window -h" && c.pane !== "right")
+      );
+    }
+  }, []);
+
+  useEffect(() => {
     const fetchGitHubProjects = async () => {
       try {
         const response = await fetch(
