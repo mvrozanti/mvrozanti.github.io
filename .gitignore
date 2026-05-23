@@ -6,6 +6,5 @@ node_modules/
 *.tsx
 components/
 lib/
-pages/api/
 styles/
 *.config.*
