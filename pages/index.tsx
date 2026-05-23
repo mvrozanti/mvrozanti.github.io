@@ -78,7 +78,7 @@ const formatProjects = (repos) => {
 };
 
 const formatContributions = (weeks) => {
-  if (!weeks || !weeks.length) return ["[No contribution data]"];
+  if (!weeks || !weeks.length) return null;
   const symbol = "■";
   const allCounts = [];
   weeks.forEach(week => {
@@ -196,12 +196,16 @@ export default function Home() {
         const weeks = await response.json();
         const heatmap = formatContributions(weeks);
         setCommands((prev) =>
-          prev.map((cmd) => (cmd.dynamic === "github-contributions" ? { ...cmd, response: heatmap } : cmd))
+          prev.map((cmd) =>
+            cmd.dynamic === "github-contributions"
+              ? (heatmap ? { ...cmd, response: heatmap } : { ...cmd, skip: true })
+              : cmd
+          )
         );
       } catch (e) {
         console.error("Failed to fetch contributions:", e);
         setCommands((prev) =>
-          prev.map((cmd) => (cmd.dynamic === "github-contributions" ? { ...cmd, response: ["[Failed to load contribution data]"] } : cmd))
+          prev.map((cmd) => (cmd.dynamic === "github-contributions" ? { ...cmd, skip: true } : cmd))
         );
       } finally {
         setIsLoading(false);
@@ -254,6 +258,10 @@ export default function Home() {
     const start = async () => {
       if (!mounted || index >= commands.length) return;
       const entry = commands[index];
+      if (entry.skip) {
+        setIndex((i) => i + 1);
+        return;
+      }
       setIsTyping(true);
 
       // Set active pane based on command
@@ -325,6 +333,11 @@ export default function Home() {
         if (isTyping) {
           const entry = commands[index];
           if (!entry) return;
+          if (entry.skip) {
+            setIsTyping(false);
+            setIndex((i) => i + 1);
+            return;
+          }
 
           // Clear the appropriate typing
           if (entry.pane === "right") {
