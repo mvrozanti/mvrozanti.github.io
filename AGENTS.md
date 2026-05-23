@@ -15,8 +15,11 @@ landing card. One output path:
 | [`mvr.ac`](https://mvr.ac/) | `gh-pages` | GitHub Pages | canonical static page |
 | [`mvrozanti.github.io`](https://mvrozanti.github.io/) | `gh-pages` | GitHub Pages | 301 → mvr.ac |
 
-Fully static — no server-side runtime. Architecture detail:
-[`docs/architecture.md`](docs/architecture.md).
+Static export. The landing page calls one runtime endpoint at
+`https://api.mvr.ac/contributions` for the GitHub contribution
+heatmap — that service lives in the `mandragora` repo (compose
+stack `hosts/mandragora-vps/compose/mvr-api/`). Architecture
+detail: [`docs/architecture.md`](docs/architecture.md).
 
 `mvr.ac` is also the apex of a wider hub —
 [Seafile](https://seafile.mvr.ac), [Radicale](https://cal.mvr.ac),

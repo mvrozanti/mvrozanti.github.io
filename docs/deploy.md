@@ -31,6 +31,15 @@ records (`@` → 4× GH anycast IPs), GitHub Pages claims the domain
 and provisions its own LE cert. Toggle "Enforce HTTPS" in repo
 Settings → Pages once the cert is green.
 
+## Runtime endpoint — `api.mvr.ac`
+
+The static page fetches `https://api.mvr.ac/contributions` for the
+GitHub contribution heatmap. That service lives in the
+[`mandragora`](https://github.com/mvrozanti/mandragora) repo under
+`hosts/mandragora-vps/compose/mvr-api/`. CORS is whitelisted to
+`mvr.ac`, `www.mvr.ac`, and `mvrozanti.github.io`. A 5xx there
+degrades gracefully — the contributions block hides itself.
+
 ## Gotchas
 
 - **NixOS shebang.** `build.sh`'s shebang is
