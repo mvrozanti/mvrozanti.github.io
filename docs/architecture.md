@@ -1,23 +1,17 @@
 # Architecture
 
-Next.js 15 in pages-router mode. Two output configurations used in
-different contexts:
+Next.js 15 in pages-router mode, fully static.
 
-| Context | Mode | Notes |
-|---|---|---|
-| Vercel deploy of `master` | server-rendered (default) | needed for `pages/api/contributions.ts` (uses GitHub token at request time) |
-| `build.sh` static export | `output: 'export'` | for GitHub Pages — no API routes; the static pages call back to Vercel for `/api/*` |
-
-`build.sh` overwrites `next.config.ts` only during the
-static-export step, then restores it. Vercel always reads the
-unmodified config.
+`build.sh` runs `output: 'export'` against the page, then publishes
+the result to GitHub Pages. There is no server-side runtime — every
+data dependency the landing page has is fetched client-side from
+the public GitHub REST API.
 
 ## Pages
 
 | Path | Source | Purpose |
 |---|---|---|
 | `/` | `pages/index.tsx` | terminal-themed landing |
-| `/api/contributions` | `pages/api/contributions.ts` | fetches GitHub contributions via GraphQL — server-only, Vercel |
 
 ## Stack
 
@@ -28,12 +22,3 @@ unmodified config.
 - TypeScript with `ignoreBuildErrors: true` and ESLint
   `ignoreDuringBuilds: true` (intentional — see
   `next.config.ts` — lets builds ship through TS noise)
-
-## Why two deploy targets
-
-`pages/api/contributions.ts` makes authenticated GitHub GraphQL
-calls and can't be prerendered. Vercel handles the dynamic side;
-GitHub Pages handles the public static side; the static page does
-a fetch to Vercel for the contributions panel. This keeps the user
-flow free of redirects (the canonical URL is always `mvr.ac`)
-while still allowing a runtime API.

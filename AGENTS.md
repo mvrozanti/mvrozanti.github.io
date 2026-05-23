@@ -8,16 +8,14 @@ context efficiency: don't re-read what you don't need.
 ## What this repo is
 
 Next.js 15 + React 19 single-page personal site. Terminal-themed
-landing card. Two output paths:
+landing card. One output path:
 
 | URL | Branch | Deployer | Purpose |
 |---|---|---|---|
 | [`mvr.ac`](https://mvr.ac/) | `gh-pages` | GitHub Pages | canonical static page |
 | [`mvrozanti.github.io`](https://mvrozanti.github.io/) | `gh-pages` | GitHub Pages | 301 → mvr.ac |
-| Vercel deploy of master | `master` | Vercel | runs `pages/api/contributions.ts` (needs `TOKEN_GITHUB`) |
 
-The static page on GitHub Pages calls back to the Vercel deploy
-for `/api/*`. Architecture detail:
+Fully static — no server-side runtime. Architecture detail:
 [`docs/architecture.md`](docs/architecture.md).
 
 `mvr.ac` is also the apex of a wider hub —
@@ -36,7 +34,7 @@ technical communication. Same person who maintains the wider
 
 ## Non-Negotiables
 
-1. **Two branches, two purposes.** `master` = source + Vercel API.
+1. **Two branches, two purposes.** `master` = source.
    `gh-pages` = static export + `CNAME`. Don't collapse them.
 2. **Deploy via `./build.sh`.** Plain `npm run build` does not
    publish anything to GitHub Pages. The script swaps
@@ -57,13 +55,11 @@ technical communication. Same person who maintains the wider
 ## Workflow
 
 ```
-edit  →  git push origin master         (Vercel auto-rebuilds API)
+edit  →  git push origin master         (source-of-truth branch)
       →  bash ./build.sh                (rebuilds + pushes gh-pages)
 ```
 
-Vercel and GitHub Pages are independent deploys. A docs-only edit
-doesn't need `build.sh`. A homepage UI change does. A
-`pages/api/*` change only matters on Vercel.
+A docs-only edit doesn't need `build.sh`. A homepage UI change does.
 
 ## Per-agent deltas
 

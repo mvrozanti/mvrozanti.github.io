@@ -18,7 +18,6 @@ Read [`AGENTS.md`](AGENTS.md) first. Only deltas live here.
 | Change | Action |
 |---|---|
 | Homepage UI / styling / `pages/index.tsx` | `git push` + `bash ./build.sh` |
-| `pages/api/*` | `git push` only — Vercel rebuilds |
 | Docs / READMEs | `git push` only — gh-pages unchanged |
 | `package.json` deps | `npm install`, commit lockfile, push, then `bash ./build.sh` |
 

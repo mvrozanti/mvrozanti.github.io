@@ -34,11 +34,6 @@ const COMMANDS = [
     ],
   },
   {
-    cmd: "gh contributions",
-    response: [],
-    dynamic: "github-contributions",
-  },
-  {
     cmd: "contact",
     response: [
       <span key="github">GitHub: <a
@@ -77,75 +72,6 @@ const formatProjects = (repos) => {
   return rows.map((row) => row.map((cell, i) => cell.padEnd(colWidths[i])).join("  "));
 };
 
-const formatContributions = (weeks) => {
-  if (!weeks || !weeks.length) return null;
-  const symbol = "■";
-  const allCounts = [];
-  weeks.forEach(week => {
-    week.contributionDays.forEach(day => {
-      allCounts.push(day.contributionCount);
-    });
-  });
-  const maxCount = Math.max(...allCounts, 1);
-  const daysOfWeek = Array(7).fill().map(() => []);
-  weeks.forEach(week => {
-    const weekContributions = Array(7).fill(0);
-    week.contributionDays.forEach(day => {
-      const date = new Date(day.date);
-      const dayOfWeek = date.getDay();
-      weekContributions[dayOfWeek] = day.contributionCount;
-    });
-    for (let i = 0; i < 7; i++) {
-      daysOfWeek[i].push(weekContributions[i]);
-    }
-  });
-  const reorderedDays = [
-    daysOfWeek[6],
-    daysOfWeek[0],
-    daysOfWeek[1],
-    daysOfWeek[2],
-    daysOfWeek[3],
-    daysOfWeek[4],
-    daysOfWeek[5],
-  ];
-  const result = [];
-  for (let day = 0; day < 7; day++) {
-    const dayElements = [];
-    reorderedDays[day].forEach((count, weekIndex) => {
-      let intensity = 0;
-      if (count > 0) {
-        intensity = Math.min(4, Math.ceil((count / maxCount) * 4));
-      }
-      const colors = [
-        "#161b22",
-        "#0e4429",
-        "#006d32",
-        "#26a641",
-        "#39d353",
-      ];
-      dayElements.push(
-        <span
-          key={weekIndex}
-          style={{
-            color: colors[intensity],
-            display: 'inline-block',
-            width: '1ch',
-            margin: '0 1px',
-          }}
-        >
-          {symbol}
-        </span>
-      );
-    });
-    result.push(
-      <div key={day} style={{ whiteSpace: 'pre' }}>
-        {dayElements}
-      </div>
-    );
-  }
-  return result;
-};
-
 export default function Home() {
   const [commands, setCommands] = useState(COMMANDS);
   const [leftDisplayed, setLeftDisplayed] = useState([]);
@@ -160,7 +86,6 @@ export default function Home() {
   const [isResumeEnhancing, setIsResumeEnhancing] = useState(false);
   const [imageCommandIndex, setImageCommandIndex] = useState(-1);
   const [showCursor, setShowCursor] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSplit, setIsSplit] = useState(false);
   const [activePane, setActivePane] = useState("left");
   const containerRef = useRef(null);
@@ -196,31 +121,6 @@ export default function Home() {
       }
     };
     fetchGitHubProjects();
-  }, []);
-
-  useEffect(() => {
-    const fetchContributions = async () => {
-      try {
-        const response = await fetch('https://mvrozanti-github-io.vercel.app/api/contributions');
-        const weeks = await response.json();
-        const heatmap = formatContributions(weeks);
-        setCommands((prev) =>
-          prev.map((cmd) =>
-            cmd.dynamic === "github-contributions"
-              ? (heatmap ? { ...cmd, response: heatmap } : { ...cmd, skip: true })
-              : cmd
-          )
-        );
-      } catch (e) {
-        console.error("Failed to fetch contributions:", e);
-        setCommands((prev) =>
-          prev.map((cmd) => (cmd.dynamic === "github-contributions" ? { ...cmd, skip: true } : cmd))
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchContributions();
   }, []);
 
   useEffect(() => {
@@ -262,7 +162,6 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (isLoading) return;
     let mounted = true;
     const start = async () => {
       if (!mounted || index >= commands.length) return;
@@ -334,7 +233,7 @@ export default function Home() {
       mounted = false;
       clearTimeout(timeout);
     };
-  }, [index, commands, isLoading, drawPixelatedImage]);
+  }, [index, commands, drawPixelatedImage]);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -497,18 +396,9 @@ export default function Home() {
             )}
           </div>
 
-          {/* Global typing indicator (for before split) */}
           {!isSplit && !leftTyping && !rightTyping && index < commands.length && (
             <div className="flex items-center gap-2 mt-4">
-              {isLoading && index >= 4 ? (
-                <>
-                  <span className="text-green-300">$ {commands[index]?.cmd}</span>
-                  <span className={`inline-block w-3 h-5 bg-green-300 ${showCursor ? "opacity-100" : "opacity-0"}`} />
-                  <span className="text-green-500 ml-2">[loading...]</span>
-                </>
-              ) : (
-                <span className={`inline-block w-3 h-5 bg-green-300 ml-1 ${showCursor ? "opacity-100" : "opacity-0"}`} />
-              )}
+              <span className={`inline-block w-3 h-5 bg-green-300 ml-1 ${showCursor ? "opacity-100" : "opacity-0"}`} />
             </div>
           )}
         </div>

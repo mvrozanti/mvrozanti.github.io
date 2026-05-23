@@ -14,9 +14,6 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  env: {
-    TOKEN_GITHUB: process.env.TOKEN_GITHUB,
-  },
   trailingSlash: true,
   images: {
     unoptimized: true
@@ -50,7 +47,6 @@ node_modules/
 *.tsx
 components/
 lib/
-pages/api/
 styles/
 *.config.*
 EOL

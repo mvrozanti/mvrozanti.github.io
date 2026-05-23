@@ -1,10 +1,10 @@
 # Deploy
 
-Two-branch model. Each branch has exactly one consumer.
+Two-branch model. One consumer.
 
 | Branch | Consumer | Carries | Trigger |
 |---|---|---|---|
-| `master` | Vercel | source + `pages/api/*` | `git push origin master` |
+| `master` | — | source | `git push origin master` |
 | `gh-pages` | GitHub Pages | static export of master + `CNAME` | `bash ./build.sh` |
 
 ## `build.sh` — what it does
@@ -31,14 +31,6 @@ records (`@` → 4× GH anycast IPs), GitHub Pages claims the domain
 and provisions its own LE cert. Toggle "Enforce HTTPS" in repo
 Settings → Pages once the cert is green.
 
-## Vercel split
-
-`pages/api/contributions.ts` calls the GitHub GraphQL API with a
-token (`TOKEN_GITHUB`, set in Vercel → Project → Environment
-Variables). It can't be statically exported. Vercel auto-deploys
-on every push to `master`; the static page on GitHub Pages calls
-that Vercel endpoint via fetch.
-
 ## Gotchas
 
 - **NixOS shebang.** `build.sh`'s shebang is
@@ -60,8 +52,5 @@ that Vercel endpoint via fetch.
   bash ./build.sh
   ```
 
-- **Vercel needs `TOKEN_GITHUB`.** Without it,
-  `/api/contributions` returns 5xx. The static page degrades —
-  the contributions panel renders empty.
 - **`gh-pages` is force-pushed.** Don't keep state on it. Anything
   meaningful goes on `master`.

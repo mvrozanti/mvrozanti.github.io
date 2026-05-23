@@ -11,9 +11,6 @@ const nextConfig: NextConfig = {
     // your project has TypeScript errors.
     ignoreBuildErrors: true,
   },
-  env: {
-    TOKEN_GITHUB: process.env.TOKEN_GITHUB,
-  }
 };
 
 export default nextConfig;
