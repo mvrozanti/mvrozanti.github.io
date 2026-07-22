@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 
 const AVATAR_URL = "https://avatars.githubusercontent.com/u/11381662?v=4";
 const AVATAR_SIZE = 200;
-const RESUME_URL = "https://raw.githubusercontent.com/mvrozanti/cv/refs/heads/master/cv-ptbr-1.png";
+const RESUME_URL = "https://raw.githubusercontent.com/mvrozanti/cv/refs/heads/master/out/resume.png";
 const RESUME_SIZE = 600;
 const TYPING_DELAY = 35;
 const TYPING_DELAY_RANDOMNESS = 40;
