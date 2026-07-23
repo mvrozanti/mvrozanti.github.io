@@ -58,7 +58,7 @@ const COMMANDS = [
       >mvrozanti@hotmail.com</a></span>,
     ],
   },
-  { cmd: "tmux split-window -h", response: ["Split pane created"] },
+  { cmd: "tmux split-window -h", response: ["Split pane created"], special: "split" },
   { cmd: "w3m resume.png", response: [], special: "resume-image", pane: "right" },
 ];
 
@@ -144,7 +144,6 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSplit, setIsSplit] = useState(false);
   const [activePane, setActivePane] = useState("left");
-  const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const resumeCanvasRef = useRef(null);
   const imageRef = useRef(null);
@@ -152,9 +151,9 @@ export default function Home() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (window.matchMedia("(max-width: 768px)").matches) {
+    if (window.matchMedia("(max-width: 640px)").matches) {
       setCommands((prev) =>
-        prev.filter((c) => c.cmd !== "tmux split-window -h" && c.pane !== "right")
+        prev.map((c) => (c.special === "split" ? { ...c, cmd: "tmux split-window -v" } : c))
       );
     }
   }, []);
@@ -254,7 +253,7 @@ export default function Home() {
         setLeftTyping("");
       }
 
-      if (entry.cmd === "tmux split-window -h") {
+      if (entry.special === "split") {
         setIsSplit(true);
         setLeftDisplayed((d) => [...d, text, ...entry.response]);
       }
@@ -308,7 +307,7 @@ export default function Home() {
       setLeftTyping("");
     }
 
-    if (entry.cmd === "tmux split-window -h") {
+    if (entry.special === "split") {
       setIsSplit(true);
       setLeftDisplayed((d) => [...d, `$ ${entry.cmd}`, ...entry.response]);
     }
@@ -361,25 +360,25 @@ export default function Home() {
   }, [isTyping, index, commands, drawPixelatedImage]);
 
   useEffect(() => {
-    if (containerRef.current) containerRef.current.scrollTop = containerRef.current.scrollHeight;
-  }, [leftDisplayed, rightDisplayed, leftTyping, rightTyping, pixelationLevel, resumePixelationLevel]);
+    if (index >= commands.length) return;
+    const doc = document.documentElement;
+    const fromBottom = doc.scrollHeight - window.innerHeight - window.scrollY;
+    if (fromBottom < 300) window.scrollTo(0, doc.scrollHeight);
+  }, [leftDisplayed, rightDisplayed, leftTyping, rightTyping, pixelationLevel, resumePixelationLevel, index, commands.length]);
 
   return (
-    <div className="min-h-screen bg-black flex items-start justify-start p-0 sm:p-6" onClick={advance}>
+    <div className="min-h-screen bg-black flex items-start justify-start p-0 sm:p-6 pb-[max(2rem,env(safe-area-inset-bottom))]" onClick={advance}>
       <div className="relative w-full max-w-6xl mx-auto">
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(closest-side,rgba(0,255,100,0.06),transparent)]" />
-        <div
-          ref={containerRef}
-          className="relative z-10 rounded-lg overflow-hidden bg-black/95 m-1.5 sm:m-4 p-3 sm:p-6 border border-green-500/30 font-mono text-green-300 text-sm shadow-[0_0_60px_rgba(0,255,0,0.04)]"
-        >
+        <div className="relative z-10 rounded-lg overflow-hidden bg-black/95 m-1.5 sm:m-4 p-3 sm:p-6 border border-green-500/30 font-mono text-green-300 text-sm shadow-[0_0_60px_rgba(0,255,0,0.04)]">
           <div className="h-4 mb-3 flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-green-500/60 shadow-[0_0_8px_rgba(0,255,0,0.6)]"></div>
             <div className="w-3 h-3 rounded-full bg-green-400/40"></div>
             <div className="w-3 h-3 rounded-full bg-green-300/20"></div>
           </div>
 
-          <div className="flex w-full items-stretch" style={{ minHeight: "400px" }}>
-            <div className={`${isSplit ? "w-1/2 pr-4 border-r border-green-500/80" : "w-full"}`}>
+          <div className="flex w-full items-stretch flex-col sm:flex-row" style={{ minHeight: "400px" }}>
+            <div className={`${isSplit ? "w-full sm:w-1/2 sm:pr-4 pb-3 sm:pb-0 border-b sm:border-b-0 sm:border-r border-green-500/80" : "w-full"}`}>
               <div className="space-y-1">
                 {leftDisplayed.map((line, i) => (
                   <div key={i} className="whitespace-pre-wrap leading-6 text-green-300">
@@ -407,7 +406,7 @@ export default function Home() {
             </div>
 
             {isSplit && (
-              <div className="w-1/2 pl-4">
+              <div className="w-full sm:w-1/2 sm:pl-4 pt-3 sm:pt-0">
                 <div className="space-y-1">
                   {rightDisplayed.map((line, i) => (
                     <div key={i} className="whitespace-pre-wrap leading-6 text-green-300">
@@ -417,7 +416,7 @@ export default function Home() {
 
                   {rightDisplayed.length > 0 && (
                     <div className="my-3">
-                      <canvas ref={resumeCanvasRef} className="block rounded mx-auto" />
+                      <canvas ref={resumeCanvasRef} className="block rounded mx-auto max-w-full h-auto" />
                       {isResumeEnhancing && (
                         <div className="text-green-500 text-xs mt-1 text-center">
                           RESOLUTION: {Math.round((1 - (resumePixelationLevel - 1) / 19) * 100)}%
