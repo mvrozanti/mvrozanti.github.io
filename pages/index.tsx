@@ -359,13 +359,6 @@ export default function Home() {
     return () => window.removeEventListener("keydown", onKey);
   }, [isTyping, index, commands, drawPixelatedImage]);
 
-  useEffect(() => {
-    if (index >= commands.length) return;
-    const doc = document.documentElement;
-    const fromBottom = doc.scrollHeight - window.innerHeight - window.scrollY;
-    if (fromBottom < 300) window.scrollTo(0, doc.scrollHeight);
-  }, [leftDisplayed, rightDisplayed, leftTyping, rightTyping, pixelationLevel, resumePixelationLevel, index, commands.length]);
-
   return (
     <div className="min-h-screen bg-black flex items-start justify-start p-0 sm:p-6 pb-[max(2rem,env(safe-area-inset-bottom))]" onClick={advance}>
       <div className="relative w-full max-w-6xl mx-auto">
