@@ -7,7 +7,6 @@ const RESUME_SIZE = 600;
 const TYPING_DELAY = 35;
 const TYPING_DELAY_RANDOMNESS = 40;
 const IMAGE_QUALITY_DELAY = 30;
-const TERMINAL_PADDING = "1.5rem";
 
 const COMMANDS = [
   { cmd: "whoami", response: ["Marcelo Vironda Rozanti"] },
@@ -63,20 +62,6 @@ const COMMANDS = [
   { cmd: "w3m resume.png", response: [], special: "resume-image", pane: "right" },
 ];
 
-const formatProjects = (repos) => {
-  if (!repos || !repos.length) return [];
-  const rows = repos.map((repo) => {
-    const date = new Date(repo.updated_at);
-    const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1)
-      .toString()
-      .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
-      return [repo.name, `★ ${repo.stargazers_count}`, `last: ${formattedDate}`];
-  });
-  const colWidths = [0, 0, 0];
-  rows.forEach((row) => row.forEach((cell, i) => (colWidths[i] = Math.max(colWidths[i], cell.length))));
-  return rows.map((row) => row.map((cell, i) => cell.padEnd(colWidths[i])).join("  "));
-};
-
 const formatContributions = (weeks) => {
   if (!weeks || !weeks.length) return null;
   const symbol = "■";
@@ -126,19 +111,15 @@ const formatContributions = (weeks) => {
       dayElements.push(
         <span
           key={weekIndex}
-          style={{
-            color: colors[intensity],
-            display: 'inline-block',
-            width: '1ch',
-            margin: '0 1px',
-          }}
+          className="contrib-cell"
+          style={{ color: colors[intensity] }}
         >
           {symbol}
         </span>
       );
     });
     result.push(
-      <div key={day} style={{ whiteSpace: 'pre' }}>
+      <div key={day} className="contrib-row">
         {dayElements}
       </div>
     );
@@ -176,26 +157,6 @@ export default function Home() {
         prev.filter((c) => c.cmd !== "tmux split-window -h" && c.pane !== "right")
       );
     }
-  }, []);
-
-  useEffect(() => {
-    const fetchGitHubProjects = async () => {
-      try {
-        const response = await fetch(
-          "https://api.github.com/users/mvrozanti/repos?sort=updated&per_page=10"
-        );
-        const repos = await response.json();
-        if (Array.isArray(repos)) {
-          const formatted = formatProjects(repos);
-          setCommands((prev) =>
-            prev.map((cmd) => (cmd.dynamic === "github-projects" ? { ...cmd, response: formatted } : cmd))
-          );
-        }
-      } catch (e) {
-        console.error("Failed to fetch GitHub projects:", e);
-      }
-    };
-    fetchGitHubProjects();
   }, []);
 
   useEffect(() => {
@@ -273,14 +234,12 @@ export default function Home() {
       }
       setIsTyping(true);
 
-      // Set active pane based on command
       if (entry.pane === "right") {
         setActivePane("right");
       }
 
       const text = `$ ${entry.cmd}`;
 
-      // Use the appropriate typing setter based on pane
       const setTyping = entry.pane === "right" ? setRightTyping : setLeftTyping;
 
       for (let i = 0; i < text.length; i++) {
@@ -289,19 +248,16 @@ export default function Home() {
         await new Promise((r) => setTimeout(r, TYPING_DELAY + Math.random() * TYPING_DELAY_RANDOMNESS));
       }
 
-      // Clear the appropriate typing
       if (entry.pane === "right") {
         setRightTyping("");
       } else {
         setLeftTyping("");
       }
 
-      // Check if this is the tmux split command
       if (entry.cmd === "tmux split-window -h") {
         setIsSplit(true);
         setLeftDisplayed((d) => [...d, text, ...entry.response]);
       }
-      // Check if this is a right pane command
       else if (entry.pane === "right") {
         setRightDisplayed((d) => [...d, text]);
         setIsResumeEnhancing(true);
@@ -336,52 +292,52 @@ export default function Home() {
     };
   }, [index, commands, isLoading, drawPixelatedImage]);
 
+  const advance = useCallback(() => {
+    if (!isTyping) return;
+    const entry = commands[index];
+    if (!entry) return;
+    if (entry.skip) {
+      setIsTyping(false);
+      setIndex((i) => i + 1);
+      return;
+    }
+
+    if (entry.pane === "right") {
+      setRightTyping("");
+    } else {
+      setLeftTyping("");
+    }
+
+    if (entry.cmd === "tmux split-window -h") {
+      setIsSplit(true);
+      setLeftDisplayed((d) => [...d, `$ ${entry.cmd}`, ...entry.response]);
+    }
+    else if (entry.pane === "right") {
+      setRightDisplayed((d) => [...d, `$ ${entry.cmd}`]);
+      setIsResumeEnhancing(true);
+      setResumePixelationLevel(1);
+      drawPixelatedImage(1, resumeCanvasRef, resumeImageRef.current, RESUME_SIZE);
+    }
+    else if (entry.special === "image") {
+      setLeftDisplayed((d) => {
+        const newDisplayed = [...d, `$ ${entry.cmd}`];
+        setImageCommandIndex(newDisplayed.length - 1);
+        return newDisplayed;
+      });
+      setIsEnhancing(true);
+      setPixelationLevel(1);
+      drawPixelatedImage(1, canvasRef, imageRef.current, AVATAR_SIZE);
+    } else {
+      setLeftDisplayed((d) => [...d, `$ ${entry.cmd}`, ...entry.response]);
+    }
+    setIsTyping(false);
+    setIndex((i) => i + 1);
+  }, [isTyping, index, commands, drawPixelatedImage]);
+
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Enter") {
-        if (isTyping) {
-          const entry = commands[index];
-          if (!entry) return;
-          if (entry.skip) {
-            setIsTyping(false);
-            setIndex((i) => i + 1);
-            return;
-          }
-
-          // Clear the appropriate typing
-          if (entry.pane === "right") {
-            setRightTyping("");
-          } else {
-            setLeftTyping("");
-          }
-
-          // Check if this is the tmux split command
-          if (entry.cmd === "tmux split-window -h") {
-            setIsSplit(true);
-            setLeftDisplayed((d) => [...d, `$ ${entry.cmd}`, ...entry.response]);
-          }
-          // Check if this is a right pane command
-          else if (entry.pane === "right") {
-            setRightDisplayed((d) => [...d, `$ ${entry.cmd}`]);
-            setIsResumeEnhancing(true);
-            setResumePixelationLevel(1);
-            drawPixelatedImage(1, resumeCanvasRef, resumeImageRef.current, RESUME_SIZE);
-          }
-          else if (entry.special === "image") {
-            setLeftDisplayed((d) => {
-              const newDisplayed = [...d, `$ ${entry.cmd}`];
-              setImageCommandIndex(newDisplayed.length - 1);
-              return newDisplayed;
-            });
-            setIsEnhancing(true);
-            setPixelationLevel(1);
-            drawPixelatedImage(1, canvasRef, imageRef.current, AVATAR_SIZE);
-          } else {
-            setLeftDisplayed((d) => [...d, `$ ${entry.cmd}`, ...entry.response]);
-          }
-          setIsTyping(false);
-          setIndex((i) => i + 1);
-        }
+        advance();
       }
       if (e.key.toLowerCase() === "r") {
         setLeftDisplayed([]);
@@ -408,32 +364,21 @@ export default function Home() {
     if (containerRef.current) containerRef.current.scrollTop = containerRef.current.scrollHeight;
   }, [leftDisplayed, rightDisplayed, leftTyping, rightTyping, pixelationLevel, resumePixelationLevel]);
 
-  const hasPadding = TERMINAL_PADDING !== "0";
-
   return (
-    <div className="min-h-screen bg-black flex items-start justify-start p-6 pt-6">
+    <div className="min-h-screen bg-black flex items-start justify-start p-0 sm:p-6" onClick={advance}>
       <div className="relative w-full max-w-6xl mx-auto">
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(closest-side,rgba(0,255,100,0.06),transparent)]" />
         <div
           ref={containerRef}
-          className="relative z-10 rounded-lg overflow-hidden bg-black/95 p-6 font-mono text-green-300 text-sm shadow-[0_0_40px_rgba(0,255,0,0.06)]"
-          style={{
-            boxShadow: "0 0 60px rgba(0,255,0,0.04)",
-            padding: hasPadding ? TERMINAL_PADDING : "0",
-            border: hasPadding ? "1px solid rgba(0, 255, 102, 0.3)" : "none",
-            margin: hasPadding ? "1rem" : "0"
-          }}
+          className="relative z-10 rounded-lg overflow-hidden bg-black/95 m-1.5 sm:m-4 p-3 sm:p-6 border border-green-500/30 font-mono text-green-300 text-sm shadow-[0_0_60px_rgba(0,255,0,0.04)]"
         >
-          {hasPadding && (
-            <div className="h-4 mb-3 flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-green-500/60 shadow-[0_0_8px_rgba(0,255,0,0.6)]"></div>
-              <div className="w-3 h-3 rounded-full bg-green-400/40"></div>
-              <div className="w-3 h-3 rounded-full bg-green-300/20"></div>
-            </div>
-          )}
+          <div className="h-4 mb-3 flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-green-500/60 shadow-[0_0_8px_rgba(0,255,0,0.6)]"></div>
+            <div className="w-3 h-3 rounded-full bg-green-400/40"></div>
+            <div className="w-3 h-3 rounded-full bg-green-300/20"></div>
+          </div>
 
           <div className="flex w-full items-stretch" style={{ minHeight: "400px" }}>
-            {/* Left Pane */}
             <div className={`${isSplit ? "w-1/2 pr-4 border-r border-green-500/80" : "w-full"}`}>
               <div className="space-y-1">
                 {leftDisplayed.map((line, i) => (
@@ -452,7 +397,6 @@ export default function Home() {
                   </div>
                 ))}
 
-                {/* Left pane typing indicator */}
                 {activePane === "left" && leftTyping && (
                   <div className="flex items-center gap-2">
                     <span className="text-green-300">{leftTyping}</span>
@@ -462,10 +406,8 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Right Pane - Only visible after split */}
             {isSplit && (
               <div className="w-1/2 pl-4">
-                {/* Right pane content */}
                 <div className="space-y-1">
                   {rightDisplayed.map((line, i) => (
                     <div key={i} className="whitespace-pre-wrap leading-6 text-green-300">
@@ -473,7 +415,6 @@ export default function Home() {
                     </div>
                   ))}
 
-                  {/* Resume Image */}
                   {rightDisplayed.length > 0 && (
                     <div className="my-3">
                       <canvas ref={resumeCanvasRef} className="block rounded mx-auto" />
@@ -485,7 +426,6 @@ export default function Home() {
                     </div>
                   )}
 
-                  {/* Right pane typing indicator */}
                   {activePane === "right" && rightTyping && (
                     <div className="flex items-center gap-2">
                       <span className="text-green-300">{rightTyping}</span>
@@ -497,7 +437,6 @@ export default function Home() {
             )}
           </div>
 
-          {/* Global typing indicator (for before split) */}
           {!isSplit && !leftTyping && !rightTyping && index < commands.length && (
             <div className="flex items-center gap-2 mt-4">
               {isLoading && index >= 4 ? (
