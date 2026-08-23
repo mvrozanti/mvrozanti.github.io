@@ -1,11 +1,12 @@
 # Architecture
 
 Next.js 15 in pages-router mode. Statically exported and published
-to GitHub Pages. The landing page calls one external endpoint at
-runtime — `https://api.mvr.ac/contributions` — for the GitHub
-contribution-calendar heatmap.
+to GitHub Pages. There is no runtime backend: the contribution
+heatmap reads `/contributions.json`, a static snapshot committed to
+`public/` and refreshed daily in CI.
 
-The API service is **not in this repo**. It lives in the
+Superseded — the heatmap previously called `https://api.mvr.ac/contributions`,
+a FastAPI service that lived in the
 `mandragora` repo at
 `hosts/mandragora-vps/compose/mvr-api/` and runs on the Oracle VPS
 behind caddy-docker-proxy. See [`hub.md`](hub.md) for how the

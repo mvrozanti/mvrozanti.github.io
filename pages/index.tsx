@@ -161,7 +161,7 @@ export default function Home() {
   useEffect(() => {
     const fetchContributions = async () => {
       try {
-        const response = await fetch('https://api.mvr.ac/contributions');
+        const response = await fetch('/contributions.json');
         const weeks = await response.json();
         const heatmap = formatContributions(weeks);
         setCommands((prev) =>

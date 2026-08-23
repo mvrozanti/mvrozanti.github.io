@@ -31,14 +31,19 @@ records (`@` → 4× GH anycast IPs), GitHub Pages claims the domain
 and provisions its own LE cert. Toggle "Enforce HTTPS" in repo
 Settings → Pages once the cert is green.
 
-## Runtime endpoint — `api.mvr.ac`
+## Contribution heatmap — static, no backend
 
-The static page fetches `https://api.mvr.ac/contributions` for the
-GitHub contribution heatmap. That service lives in the
-[`mandragora`](https://github.com/mvrozanti/mandragora) repo under
-`hosts/mandragora-vps/compose/mvr-api/`. CORS is whitelisted to
-`mvr.ac`, `www.mvr.ac`, and `mvrozanti.github.io`. A 5xx there
-degrades gracefully — the contributions block hides itself.
+The page fetches `/contributions.json`, a static file in `public/`.
+`.github/workflows/deploy.yml` refreshes it daily (05:17 UTC) via the
+GitHub GraphQL API, commits it, rebuilds, and publishes to
+`gh-pages`. A failed refresh keeps the committed snapshot; a missing
+or empty file degrades gracefully — the contributions block hides
+itself.
+
+Because it is same-origin, the heatmap now also renders on
+localhost, which the old CORS-restricted `api.mvr.ac` endpoint never
+allowed. That service (`mandragora` repo,
+`hosts/mandragora-vps/compose/mvr-api/`) is no longer used.
 
 ## Gotchas
 
