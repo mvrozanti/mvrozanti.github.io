@@ -7,8 +7,7 @@ import { identity, labels, monthShort, monthYear, projects, roles } from "@/data
 import type { Lang } from "@/data/cv";
 
 export type Week = { contributionDays: { contributionCount: number; date: string }[] };
-export type Service = { name: string; host: string; desc: string; access: string };
-export type Props = { weeks: Week[]; publicServices: Service[]; totalServices: number; initialLang?: Lang };
+export type Props = { weeks: Week[]; initialLang?: Lang };
 
 const AVATAR = `https://avatars.githubusercontent.com/${identity.github}?s=160`;
 const CELL = 10;
@@ -73,10 +72,9 @@ function Heatmap({ weeks, lang }: { weeks: Week[]; lang: Lang }) {
   );
 }
 
-export default function Home({ weeks, publicServices, totalServices, initialLang = "en" }: Props) {
+export default function Home({ weeks, initialLang = "en" }: Props) {
   const [lang, setLang] = useState<Lang>(initialLang);
   const L = labels[lang];
-  const hidden = totalServices - publicServices.length;
   return (
     <>
       <Head>
@@ -173,19 +171,6 @@ export default function Home({ weeks, publicServices, totalServices, initialLang
                   <div className="d">{p.description[lang]}</div>
                 </div>
               ))}
-            </div>
-            <div className="sec" style={stagger(1)}>
-              <h2>{L.also}</h2>
-              <div className="also">
-                {publicServices.map((s, i) => (
-                  <span key={s.host}>
-                    {i > 0 ? " · " : ""}
-                    <a href={`https://${s.host}`} title={s.desc}>{s.name}</a>
-                  </span>
-                ))}
-                <br />
-                <a className="ghost" href="https://hub.mvr.ac">+{hidden} {L.behind} →</a>
-              </div>
             </div>
           </div>
 
