@@ -1,7 +1,7 @@
 # The mvr.ac hub
 
 This site is the apex (`https://mvr.ac/`). Subdomains run on a
-separate VPS (Oracle Cloud, `146.235.51.189`) and are configured
+separate VPS (Oracle Cloud, `129.148.45.172`) and are configured
 declaratively in the
 [`mandragora`](https://github.com/mvrozanti/mandragora) repo under
 `hosts/mandragora-vps/compose/`.
@@ -29,7 +29,7 @@ declaratively in the
 ## DNS layout
 
 - Apex `mvr.ac` → 4× GitHub Pages anycast (185.199.108–111.153)
-- Wildcard `*.mvr.ac` → `146.235.51.189` (Oracle VPS)
+- Wildcard `*.mvr.ac` → `129.148.45.172` (Oracle VPS)
 - `www` CNAME → `mvrozanti.github.io.`
 
 ## Auth model
