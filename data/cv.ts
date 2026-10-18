@@ -28,8 +28,8 @@ export const identity = {
   site: "mvr.ac",
   cvHome: "https://cv.mvr.ac",
   cvPdf: {
-    en: "https://cv.mvr.ac/marcelo-vironda-rozanti-en-impact.pdf",
-    pt: "https://cv.mvr.ac/marcelo-vironda-rozanti-pt-impact.pdf",
+    en: "https://cv.mvr.ac/marcelo-vironda-rozanti-en-default.pdf",
+    pt: "https://cv.mvr.ac/marcelo-vironda-rozanti-pt-default.pdf",
   },
   education: {
     en: "B.Sc. Computer Science, Universidade Presbiteriana Mackenzie, 2020",

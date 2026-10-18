@@ -6,7 +6,7 @@ const text = (s) => s.replace(/<!-- -->/g, "");
 const html = text(await readFile(new URL("../out/index.html", import.meta.url), "utf8"));
 const htmlPt = text(await readFile(new URL("../out/pt/index.html", import.meta.url), "utf8"));
 const linked = [...new Set([...html.matchAll(/(?:href|src)="(https?:\/\/[^"]+)"/g)].map((m) => m[1]))];
-const ptPdfs = linked.filter((u) => u.endsWith("-en-impact.pdf")).map((u) => u.replace("-en-impact.pdf", "-pt-impact.pdf"));
+const ptPdfs = linked.filter((u) => u.endsWith("-en-default.pdf")).map((u) => u.replace("-en-default.pdf", "-pt-default.pdf"));
 const self = linked.filter((u) => /^https:\/\/mvr\.ac\//.test(u));
 const urls = [...new Set([...linked, ...ptPdfs])].filter((u) => !self.includes(u));
 const UA = "Mozilla/5.0 (X11; Linux x86_64) mvr.ac link check";
@@ -23,7 +23,7 @@ test("page renders without undefined, NaN or object leaks", () => {
 });
 
 test("/pt/ is the same résumé in Portuguese, roles included", () => {
-  for (const needle of ["Engenheiro de Software Sênior", "Experiência", "Desenvolvedor Backend", "Formação", "Idiomas", "Português — nativo", "registradoras B3 e CERC", "pagamento instantâneo", "obrigações fiscais", "São Paulo, Brasil", "contribuições no último ano", "-pt-impact.pdf"]) {
+  for (const needle of ["Engenheiro de Software Sênior", "Experiência", "Desenvolvedor Backend", "Formação", "Idiomas", "Português — nativo", "registradoras B3 e CERC", "pagamento instantâneo", "obrigações fiscais", "São Paulo, Brasil", "contribuições no último ano", "-pt-default.pdf"]) {
     assert.ok(htmlPt.includes(needle), `pt missing: ${needle}`);
   }
   assert.match(htmlPt, /hreflang="pt-BR"/i, "pt missing hreflang alternate");
@@ -54,7 +54,7 @@ test("links into this site point at files the export contains", async () => {
 
 test("the page links out", () => {
   assert.ok(linked.length >= 12, `only ${linked.length} external links`);
-  assert.ok(linked.some((u) => u.endsWith("-en-impact.pdf")), "no PDF link");
+  assert.ok(linked.some((u) => u.endsWith("-en-default.pdf")), "no PDF link");
   assert.equal(ptPdfs.length, 1, "the PT-BR PDF the toggle reveals must be derivable from the EN one");
   assert.ok(html.includes("mailto:"), "no mailto");
 });
