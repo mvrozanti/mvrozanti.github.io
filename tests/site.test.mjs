@@ -2,10 +2,13 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile, access } from "node:fs/promises";
 
-const html = await readFile(new URL("../out/index.html", import.meta.url), "utf8");
+const text = (s) => s.replace(/<!-- -->/g, "");
+const html = text(await readFile(new URL("../out/index.html", import.meta.url), "utf8"));
+const htmlPt = text(await readFile(new URL("../out/pt/index.html", import.meta.url), "utf8"));
 const linked = [...new Set([...html.matchAll(/(?:href|src)="(https?:\/\/[^"]+)"/g)].map((m) => m[1]))];
 const ptPdfs = linked.filter((u) => u.endsWith("-en-impact.pdf")).map((u) => u.replace("-en-impact.pdf", "-pt-impact.pdf"));
-const urls = [...new Set([...linked, ...ptPdfs])];
+const self = linked.filter((u) => /^https:\/\/mvr\.ac\//.test(u));
+const urls = [...new Set([...linked, ...ptPdfs])].filter((u) => !self.includes(u));
 const UA = "Mozilla/5.0 (X11; Linux x86_64) mvr.ac link check";
 const BOT_WALLED = { "linkedin.com": [999] };
 
@@ -16,7 +19,18 @@ test("page carries the identity and every role", () => {
 });
 
 test("page renders without undefined, NaN or object leaks", () => {
-  for (const bad of ["undefined", "NaN", "[object Object]", "null</"]) assert.ok(!html.includes(bad), `leaked: ${bad}`);
+  for (const page of [html, htmlPt]) for (const bad of ["undefined", "NaN", "[object Object]", "null</"]) assert.ok(!page.includes(bad), `leaked: ${bad}`);
+});
+
+test("/pt/ is the same résumé in Portuguese, roles included", () => {
+  for (const needle of ["Engenheiro de Software Sênior", "Experiência", "Desenvolvedor Backend", "Formação", "Idiomas", "Português — nativo", "registradoras B3 e CERC", "pagamento instantâneo", "obrigações fiscais", "São Paulo, Brasil", "contribuições no último ano", "-pt-impact.pdf"]) {
+    assert.ok(htmlPt.includes(needle), `pt missing: ${needle}`);
+  }
+  assert.match(htmlPt, /hreflang="pt-BR"/i, "pt missing hreflang alternate");
+  for (const english of ["Senior Software Engineer ", "Backend integrations with", "Experience<", "Education<"]) {
+    assert.ok(!htmlPt.includes(english), `pt still carries: ${english}`);
+  }
+  for (const needle of ["SRM Asset", "C6 Bank", "Sys4Bank", "RAT-via-Telegram"]) assert.ok(htmlPt.includes(needle), `pt missing: ${needle}`);
 });
 
 test("design-system files and data ship with the export", async () => {
@@ -28,6 +42,14 @@ test("contribution heatmap has a full year of cells and a caption", () => {
   const cells = (html.match(/<rect class="h[0-4]"/g) || []).length;
   assert.ok(cells >= 360 && cells <= 371, `cells: ${cells}`);
   assert.match(html, /contributions in the last year/);
+});
+
+test("links into this site point at files the export contains", async () => {
+  assert.ok(self.length >= 2, "expected the hreflang alternates");
+  for (const u of self) {
+    const rel = new URL(u).pathname.replace(/\/$/, "") + "/index.html";
+    await access(new URL(`../out${rel}`, import.meta.url));
+  }
 });
 
 test("the page links out", () => {

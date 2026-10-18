@@ -6,9 +6,9 @@ import { Github, Globe, Linkedin, Mail } from "lucide-react";
 import { identity, labels, monthShort, monthYear, projects, roles } from "@/data/cv";
 import type { Lang } from "@/data/cv";
 
-type Week = { contributionDays: { contributionCount: number; date: string }[] };
-type Service = { name: string; host: string; desc: string; access: string };
-type Props = { weeks: Week[]; publicServices: Service[]; totalServices: number };
+export type Week = { contributionDays: { contributionCount: number; date: string }[] };
+export type Service = { name: string; host: string; desc: string; access: string };
+export type Props = { weeks: Week[]; publicServices: Service[]; totalServices: number; initialLang?: Lang };
 
 const AVATAR = `https://avatars.githubusercontent.com/${identity.github}?s=160`;
 const CELL = 10;
@@ -73,15 +73,19 @@ function Heatmap({ weeks, lang }: { weeks: Week[]; lang: Lang }) {
   );
 }
 
-export default function Home({ weeks, publicServices, totalServices }: Props) {
-  const [lang, setLang] = useState<Lang>("en");
+export default function Home({ weeks, publicServices, totalServices, initialLang = "en" }: Props) {
+  const [lang, setLang] = useState<Lang>(initialLang);
   const L = labels[lang];
   const hidden = totalServices - publicServices.length;
   return (
     <>
       <Head>
-        <title>{`${identity.name} · ${identity.title}`}</title>
-        <meta name="description" content={`${identity.name} — ${identity.title}, ${identity.location}. Résumé, open source and the services running on mvr.ac.`} />
+        <title>{`${identity.name} · ${identity.title[lang]}`}</title>
+        <meta name="description" content={lang === "en"
+          ? `${identity.name} — ${identity.title.en}, ${identity.location.en}. Résumé, open source and the services running on mvr.ac.`
+          : `${identity.name} — ${identity.title.pt}, ${identity.location.pt}. Currículo, código aberto e os serviços no ar em mvr.ac.`} />
+        <link rel="alternate" hrefLang="en" href="https://mvr.ac/" />
+        <link rel="alternate" hrefLang="pt-BR" href="https://mvr.ac/pt/" />
       </Head>
       <div className="page">
         <article className="sheet">
@@ -89,9 +93,9 @@ export default function Home({ weeks, publicServices, totalServices }: Props) {
             <img className="avatar" src={AVATAR} alt="" width={72} height={72} style={stagger(0)} />
             <h1 style={stagger(1)}>{identity.name}</h1>
             <div className="role" style={stagger(2)}>
-              {identity.title}
+              {identity.title[lang]}
               <br />
-              {identity.location}
+              {identity.location[lang]}
             </div>
             <div className="blk" style={stagger(3)}>
               <p className="lbl">{L.contact}</p>
@@ -148,9 +152,9 @@ export default function Home({ weeks, publicServices, totalServices }: Props) {
                 </div>
                 <div>
                   <div className="t">
-                    {r.title} <span>· {r.company}{r.detail ? ` · ${r.detail}` : ""}</span>
+                    {r.title[lang]} <span>· {r.company}{r.detail ? ` · ${r.detail[lang]}` : ""}</span>
                   </div>
-                  <div className="what">{r.summary}</div>
+                  <div className="what">{r.summary[lang]}</div>
                   <div className="st">{r.stack.join(" · ")}</div>
                 </div>
               </div>
@@ -166,7 +170,7 @@ export default function Home({ weeks, publicServices, totalServices }: Props) {
                     <a href={`https://github.com/${identity.github}/${p.name}`}>{p.name}</a>
                     {p.stars ? <i>{p.stars} ★</i> : null}
                   </div>
-                  <div className="d">{p.description}</div>
+                  <div className="d">{p.description[lang]}</div>
                 </div>
               ))}
             </div>
@@ -196,12 +200,6 @@ export default function Home({ weeks, publicServices, totalServices }: Props) {
 }
 
 export const getStaticProps: GetStaticProps<Props> = async () => {
-  const fs = await import("node:fs/promises");
-  const path = await import("node:path");
-  const root = process.cwd();
-  const weeks: Week[] = JSON.parse(await fs.readFile(path.join(root, "public", "contributions.json"), "utf8"));
-  const hub = JSON.parse(await fs.readFile(path.join(root, "data", "services.json"), "utf8"));
-  const services: Service[] = hub.services;
-  const publicServices = services.filter((s) => s.access === "open" && !["root", "api"].includes(s.name));
-  return { props: { weeks, publicServices, totalServices: services.length } };
+  const { loadProps } = await import("@/lib/props");
+  return { props: await loadProps() };
 };
