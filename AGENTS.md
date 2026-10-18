@@ -7,18 +7,25 @@ context efficiency: don't re-read what you don't need.
 
 ## What this repo is
 
-Next.js 15 + React 19 single-page personal site. Terminal-themed
-landing card. One output path:
+Next.js 15 + React 19 single-page personal site: a résumé sheet in
+the mvr.ac design system (`--mv-*` tokens from `public/theme.css`,
+palette following the desktop wallpaper via `public/theme.js` →
+`api.mvr.ac/theme`). One output path:
 
 | URL | Branch | Deployer | Purpose |
 |---|---|---|---|
 | [`mvr.ac`](https://mvr.ac/) | `gh-pages` | GitHub Pages | canonical static page |
 | [`mvrozanti.github.io`](https://mvrozanti.github.io/) | `gh-pages` | GitHub Pages | 301 → mvr.ac |
 
-Static export with no runtime backend. The GitHub contribution
-heatmap reads `/contributions.json`, a static snapshot refreshed
-daily by `.github/workflows/deploy.yml`. Architecture
-detail: [`docs/architecture.md`](docs/architecture.md).
+Static export with no runtime backend. Career, projects and
+skills live in `data/cv.ts`, mirrored from the cv repo's
+`shared/facts.md`; the contribution heatmap and the "also running"
+list are built from `public/contributions.json` and
+`data/services.json`, both static snapshots refreshed daily by
+`.github/workflows/deploy.yml`. `npm test` builds nothing: it reads
+`out/index.html` and checks content, shipped files, and that every
+external link resolves — the workflow runs it before deploying.
+Architecture detail: [`docs/architecture.md`](docs/architecture.md).
 
 `mvr.ac` is also the apex of a wider hub —
 [Seafile](https://seafile.mvr.ac), [Radicale](https://cal.mvr.ac),
@@ -45,13 +52,19 @@ technical communication. Same person who maintains the wider
    [`docs/deploy.md`](docs/deploy.md).
 3. **`public/CNAME` is load-bearing.** Removing it un-claims
    `mvr.ac` on GitHub Pages.
-4. **Lockfile in sync with `package.json`.** A `package.json` bump
+4. **`npm test` passes on the export before anything deploys.** It
+   checks the identity and every role are rendered, nothing leaks
+   `undefined`, the design-system files ship, the heatmap has a full
+   year, and every external link (PDFs, repos, public services)
+   answers. The deploy workflow runs it; run `bash ./build.sh`-style
+   exports through it locally too.
+5. **Lockfile in sync with `package.json`.** A `package.json` bump
    without regenerating `package-lock.json` breaks `build.sh`
    mid-flight: `npm install` modifies the lockfile, the
    subsequent `git checkout gh-pages` then aborts on dirty tree.
    Recipe in [`docs/deploy.md`](docs/deploy.md).
-5. **No code comments.** Naming + structure self-document.
-6. **Runs on NixOS.** `build.sh`'s shebang is
+6. **No code comments.** Naming + structure self-document.
+7. **Runs on NixOS.** `build.sh`'s shebang is
    `#!/usr/bin/env bash` so it works without `/bin/bash`.
 
 ## Workflow
